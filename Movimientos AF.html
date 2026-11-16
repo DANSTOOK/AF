@@ -254,7 +254,7 @@
     #nav { flex-wrap: wrap; overflow: visible; }
   }
   @media (min-width: 900px) {
-    #app { display: grid; grid-template-columns: 300px minmax(0, 1fr); padding: 0; min-height: 100vh; }
+    #app { display: grid; grid-template-columns: 340px minmax(0, 1fr); padding: 0; min-height: 100vh; }
     #lateral { display: block; position: sticky; top: 0; height: 100vh; overflow-y: auto; box-sizing: border-box; padding: 6px 14px 20px;
       background: var(--vidrio); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); border-right: 1px solid var(--sep); }
     #lateral fieldset, #lateral details { margin-bottom: 12px; }
@@ -367,6 +367,49 @@
   .vacio-grande .ico { animation: flotar 3s ease-in-out infinite; }
   @keyframes flotar { 50% { transform: translateY(-6px); } }
 
+  /* Zona para arrastrar el MAF: borde punteado en movimiento, ícono que flota, brillo al arrastrar encima */
+  .zona { position: relative; display: flex; align-items: center; gap: 14px; width: 100%; box-sizing: border-box; margin: 0; padding: 18px 16px;
+    border-radius: 18px; cursor: pointer; overflow: hidden; color: var(--fg);
+    background:
+      linear-gradient(var(--card), var(--card)) padding-box,
+      repeating-linear-gradient(90deg, var(--azul) 0 10px, transparent 10px 18px) border-box;
+    border: 2px dashed transparent; background-color: var(--sel);
+    transition: transform 0.25s var(--curva), box-shadow 0.3s var(--curva), background-color 0.3s var(--curva); }
+  .zona { border: 2px dashed color-mix(in srgb, var(--azul) 55%, transparent); background: color-mix(in srgb, var(--azul) 6%, var(--card)); }
+  .zona::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.55;
+    background: linear-gradient(110deg, transparent 20%, color-mix(in srgb, var(--azul) 14%, transparent) 45%, transparent 70%); background-size: 250% 100%;
+    animation: barrido 3.2s var(--curva) infinite; }
+  @keyframes barrido { from { background-position: 150% 0; } to { background-position: -100% 0; } }
+  .zona:hover { transform: translateY(-1px); box-shadow: 0 8px 22px color-mix(in srgb, var(--azul) 18%, transparent); }
+  .zona:active { transform: scale(0.98); }
+  .zona input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .zona:focus-within { box-shadow: 0 0 0 3px var(--sel); }
+  .zona-ico { flex: 0 0 auto; width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; color: #fff;
+    background: linear-gradient(145deg, #0A84FF, #5E5CE6); box-shadow: 0 6px 16px rgba(10, 132, 255, 0.35); animation: flotar 3s ease-in-out infinite; }
+  .zona-ico svg { width: 26px; height: 26px; }
+  .zona-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; position: relative; }
+  .zona-t1 { font-size: 16px; }
+  .zona-t2 { font-size: 13px; color: var(--muted); }
+  .zona-soltar { display: none; font-size: 16px; color: var(--azul); }
+  /* Con el MAF ya cargado: renglón compacto */
+  .zona.compacta { padding: 10px 12px; gap: 10px; border-radius: 14px; }
+  .zona.compacta .zona-ico { width: 34px; height: 34px; border-radius: 10px; animation: none; }
+  .zona.compacta .zona-ico svg { width: 20px; height: 20px; }
+  .zona.compacta .zona-t1 { font-size: 14px; } .zona.compacta .zona-t2 { font-size: 12px; }
+  .zona.compacta::before { animation-duration: 6s; opacity: 0.35; }
+  /* Mientras se arrastra un archivo sobre la ventana: la zona se agranda y brilla; el fondo se atenúa */
+  body.arrastrando .zona { transform: scale(1.03); border-style: solid; border-color: var(--azul); background: color-mix(in srgb, var(--azul) 14%, var(--card));
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--azul) 18%, transparent), 0 12px 30px color-mix(in srgb, var(--azul) 25%, transparent); }
+  body.arrastrando .zona .zona-t1, body.arrastrando .zona .zona-t2 { display: none; }
+  body.arrastrando .zona .zona-soltar { display: block; }
+  body.arrastrando .zona .zona-ico { animation: latir 0.9s ease-in-out infinite; }
+  @keyframes latir { 50% { transform: scale(1.12); } }
+  body.arrastrando #principal { opacity: 0.55; transition: opacity 0.25s var(--curva); }
+  /* Leyendo el MAF: la zona late suave y no acepta otro archivo */
+  .zona:has(input:disabled) { pointer-events: none; }
+  .zona:has(input:disabled) .zona-ico { animation: latir 1.2s ease-in-out infinite; }
+  #lateral legend { font-size: 15px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+
   /* Confirmaciones como hoja de iPhone: sube desde abajo con el fondo difuminado; en pantalla ancha, tarjeta centrada */
   .hoja-fondo { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center; padding: 0;
     background: rgba(0, 0, 0, 0); -webkit-backdrop-filter: blur(0); backdrop-filter: blur(0); transition: background-color 0.3s var(--curva), backdrop-filter 0.3s var(--curva); }
@@ -417,7 +460,11 @@
 <div id="marca"><span class="logo">AF</span><div><b>Activo Fijo</b><span>Movimientos, plaqueo y bajas</span></div></div>
 <fieldset id="mafBox">
   <legend>MAF (base de activos)</legend>
-  <input type="file" id="archivoMaf" accept=".xlsx,.xls,.xlsb,.csv">
+  <label id="zonaMaf" class="zona" title="Arrastre aquí el archivo MAF o haga clic para elegirlo">
+    <input type="file" id="archivoMaf" accept=".xlsx,.xls,.xlsb,.csv">
+    <span class="zona-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg></span>
+    <span class="zona-txt"><b class="zona-t1">Arrastre aquí el MAF</b><span class="zona-t2">o haga clic para elegir el Excel</span><b class="zona-soltar">Suelte para cargar</b></span>
+  </label>
   <button id="otroMaf" class="oculto">Cargar otro MAF</button>
   <div id="estadoMaf"></div>
 </fieldset>
@@ -445,7 +492,7 @@
 <datalist id="listaCr"></datalist>
 <datalist id="listaTiendas"></datalist>
 
-<div id="sinMaf" class="vacio-grande oculto"><span class="ico m-movimientos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg></span><b>Cargue el MAF para empezar</b><div class="muted">Use el botón de la tarjeta "MAF (base de activos)". Se queda guardado en este navegador para la próxima vez.</div></div>
+<div id="sinMaf" class="vacio-grande oculto"><span class="ico m-movimientos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg></span><b>Cargue el MAF para empezar</b><div class="muted">Arrastre el Excel del MAF a cualquier parte de esta ventana, o use la zona "Arrastre aquí el MAF". Se queda guardado en este navegador para la próxima vez.</div></div>
 
 <div id="modulos" class="oculto">
 <div id="mod-movimientos" class="oculto"></div>
@@ -1846,8 +1893,9 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
   function mostrarEstadoMaf() {
     var m = App.maf;
     $('modulos').classList.toggle('oculto', !m);       // sin MAF no hay nada que capturar
-    $('archivoMaf').classList.toggle('oculto', !!m);
-    $('otroMaf').classList.toggle('oculto', !m);
+    // Con MAF cargado la zona para arrastrar se hace compacta ("Arrastre otro MAF"); sin MAF es grande
+    $('zonaMaf').classList.toggle('compacta', !!m);
+    $('zonaMaf').querySelector('.zona-t1').textContent = m ? 'Arrastre aquí otro MAF' : 'Arrastre aquí el MAF';
     $('sinMaf').classList.toggle('oculto', !!m);
     if (!m) { $('estadoMaf').innerHTML = '<b>Para empezar, seleccione el archivo MAF (Excel).</b>'; return; }
     function dato(n, txt, cls, titulo) {
@@ -1939,6 +1987,24 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
   }
 
   $('otroMaf').addEventListener('click', function () { $('archivoMaf').click(); });
+
+  // Arrastrar y soltar el MAF: en la zona o en cualquier parte de la ventana (usa la misma carga que el botón)
+  var arrastres = 0;
+  function conArchivos(e) { return e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') >= 0; }
+  function marcarArrastre(si) { document.body.classList.toggle('arrastrando', si); }
+  document.addEventListener('dragenter', function (e) { if (!conArchivos(e)) return; e.preventDefault(); arrastres++; marcarArrastre(true); });
+  document.addEventListener('dragover', function (e) { if (!conArchivos(e)) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
+  document.addEventListener('dragleave', function (e) { if (!conArchivos(e)) return; arrastres = Math.max(0, arrastres - 1); if (!arrastres) marcarArrastre(false); });
+  document.addEventListener('drop', function (e) {
+    if (!conArchivos(e)) return;
+    e.preventDefault(); arrastres = 0; marcarArrastre(false);
+    var f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (!f || $('archivoMaf').disabled) return;
+    if (!/\.(xlsx|xls|xlsb|csv)$/i.test(f.name)) { $('estadoMaf').innerHTML = '<span class="err">"' + esc(f.name) + '" no es un Excel. Arrastre el archivo del MAF (.xlsx).</span>'; return; }
+    var dt = new DataTransfer(); dt.items.add(f);
+    $('archivoMaf').files = dt.files;
+    $('archivoMaf').dispatchEvent(new Event('change', { bubbles: true }));
+  });
   $('archivoMaf').addEventListener('change', function (e) {
     var f = e.target.files[0];
     if (!f) return;

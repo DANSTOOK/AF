@@ -140,8 +140,9 @@
   function mostrarEstadoMaf() {
     var m = App.maf;
     $('modulos').classList.toggle('oculto', !m);       // sin MAF no hay nada que capturar
-    $('archivoMaf').classList.toggle('oculto', !!m);
-    $('otroMaf').classList.toggle('oculto', !m);
+    // Con MAF cargado la zona para arrastrar se hace compacta ("Arrastre otro MAF"); sin MAF es grande
+    $('zonaMaf').classList.toggle('compacta', !!m);
+    $('zonaMaf').querySelector('.zona-t1').textContent = m ? 'Arrastre aquí otro MAF' : 'Arrastre aquí el MAF';
     $('sinMaf').classList.toggle('oculto', !!m);
     if (!m) { $('estadoMaf').innerHTML = '<b>Para empezar, seleccione el archivo MAF (Excel).</b>'; return; }
     function dato(n, txt, cls, titulo) {
@@ -233,6 +234,24 @@
   }
 
   $('otroMaf').addEventListener('click', function () { $('archivoMaf').click(); });
+
+  // Arrastrar y soltar el MAF: en la zona o en cualquier parte de la ventana (usa la misma carga que el botón)
+  var arrastres = 0;
+  function conArchivos(e) { return e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') >= 0; }
+  function marcarArrastre(si) { document.body.classList.toggle('arrastrando', si); }
+  document.addEventListener('dragenter', function (e) { if (!conArchivos(e)) return; e.preventDefault(); arrastres++; marcarArrastre(true); });
+  document.addEventListener('dragover', function (e) { if (!conArchivos(e)) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
+  document.addEventListener('dragleave', function (e) { if (!conArchivos(e)) return; arrastres = Math.max(0, arrastres - 1); if (!arrastres) marcarArrastre(false); });
+  document.addEventListener('drop', function (e) {
+    if (!conArchivos(e)) return;
+    e.preventDefault(); arrastres = 0; marcarArrastre(false);
+    var f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (!f || $('archivoMaf').disabled) return;
+    if (!/\.(xlsx|xls|xlsb|csv)$/i.test(f.name)) { $('estadoMaf').innerHTML = '<span class="err">"' + esc(f.name) + '" no es un Excel. Arrastre el archivo del MAF (.xlsx).</span>'; return; }
+    var dt = new DataTransfer(); dt.items.add(f);
+    $('archivoMaf').files = dt.files;
+    $('archivoMaf').dispatchEvent(new Event('change', { bubbles: true }));
+  });
   $('archivoMaf').addEventListener('change', function (e) {
     var f = e.target.files[0];
     if (!f) return;

@@ -13,7 +13,7 @@ Arriba hay cinco pestañas en la misma página; al hacer clic el módulo entra d
 | Consultas y seguimiento | Activos de una tienda, pendientes de plaqueo, seguimiento de lo enviado | Excel de consulta |
 
 ## Uso
-1. **MAF**: seleccionar cualquier versión (.xlsx). Tarda 10-20 s en segundo plano; luego se recupera solo. Hasta tener MAF no se muestran los apartados. Cada apartado dice en una línea para qué sirve y, al capturar, en "Ahora:" qué sigue. El número junto a una pestaña son los movimientos capturados sin terminar.
+1. **MAF**: arrastrar el Excel del MAF a la zona "Arrastre aquí el MAF" o a cualquier parte de la ventana (o hacer clic en la zona para elegirlo); cualquier versión (.xlsx). Tarda 10-20 s en segundo plano; luego se recupera solo. Hasta tener MAF no se muestran los apartados. Cada apartado dice en una línea para qué sirve y, al capturar, en "Ahora:" qué sigue. El número junto a una pestaña son los movimientos capturados sin terminar.
 2. **Altas, bajas y transferencias**: elegir Alta, Baja o Transferencia; capturar CR o tienda (o dejarlo vacío y se llena con la placa); llenar lo que pida (tipo de baja o tienda destino) y escribir/escanear la placa. Muestra lo que se escribirá; se agrega con **✓**. Enter/escáner solo busca.
    - Alta: casa con el activo pendiente de placa de la tienda (por serie o eligiendo). Si el equipo está cargado en otra tienda, genera alta + transferencia. **Cotejar** muestra lo que dice el MAF de cada tienda.
    - Baja: elegir el **tipo de baja** (los 10 del formato oficial).
