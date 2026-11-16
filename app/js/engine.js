@@ -570,6 +570,11 @@
     fila.plaqueable = reg.plaqueable || 'S';
     fila.observaciones = texto(mov.observaciones);
     if (!fila.serie) res.advertencias.push('El equipo queda sin serie; captúrela si la tiene.');
+    // Serie capturada distinta a la que el MAF tiene para ese activo: puede ser otro equipo (se avisa, no se bloquea)
+    if (serie && reg.serie && llaveSerie(reg.serie) !== serie) {
+      res.serieDistinta = { capturada: texto(mov.serie).toUpperCase(), maf: reg.serie };
+      res.advertencias.push('La serie capturada (' + res.serieDistinta.capturada + ') no coincide con la del MAF (' + reg.serie + ') para el activo ' + reg.noActivo + '. Verifique que sea el mismo equipo.');
+    }
 
     if (reg.cr !== cr) {
       // Activo cargado en el MAF a otra tienda: ALTA en su CR del MAF + TRASPASO a la tienda real

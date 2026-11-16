@@ -332,6 +332,52 @@
     }).join('') + '</div>';
   };
 
+  /**
+   * Confirmación como hoja de iPhone (sube desde abajo; en pantalla ancha, tarjeta centrada).
+   * opc: { titulo, texto, aceptar, cancelar, peligro }. Devuelve Promise<boolean>. Esc = cancelar, Enter = aceptar.
+   */
+  App.confirmar = function (opc) {
+    return new Promise(function (resolver) {
+      var antes = document.activeElement;
+      var fondo = document.createElement('div');
+      fondo.className = 'hoja-fondo';
+      fondo.innerHTML = '<div class="hoja" role="alertdialog" aria-modal="true" aria-labelledby="hojaTitulo"><span class="hoja-asa"></span>' +
+        '<div class="hoja-titulo" id="hojaTitulo">' + esc(opc.titulo || '¿Continuar?') + '</div>' +
+        (opc.texto ? '<div class="hoja-texto">' + esc(opc.texto) + '</div>' : '') +
+        '<div class="hoja-botones"><button data-h="no">' + esc(opc.cancelar || 'Cancelar') + '</button>' +
+        '<button data-h="si" class="' + (opc.peligro ? 'peligro' : 'palomita') + '">' + esc(opc.aceptar || 'Aceptar') + '</button></div></div>';
+      document.body.appendChild(fondo);
+      requestAnimationFrame(function () { fondo.classList.add('abierta'); });
+      setTimeout(function () { fondo.classList.add('abierta'); }, 30);
+      var hecho = false;
+      function cerrar(ok) {
+        if (hecho) return; hecho = true;
+        document.removeEventListener('keydown', teclas, true);
+        fondo.classList.remove('abierta'); fondo.classList.add('cerrando');
+        setTimeout(function () { fondo.remove(); if (antes && antes.focus) antes.focus({ preventScroll: true }); }, 260);
+        resolver(ok);
+      }
+      var ultimaTecla = 0;
+      function teclas(e) {
+        if (e.key && e.key.length === 1) { ultimaTecla = performance.now(); e.preventDefault(); e.stopPropagation(); return; } // un escaneo no escribe detrás de la hoja
+        if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cerrar(false); }
+        else if (e.key === 'Enter') {
+          e.preventDefault(); e.stopPropagation();
+          // El Enter que cierra un escaneo (llega pegado a los dígitos) no acepta la hoja; solo el Enter presionado a mano
+          if (performance.now() - ultimaTecla < 150) return;
+          if (document.activeElement && document.activeElement.getAttribute('data-h') === 'no') cerrar(false); else cerrar(true);
+        }
+      }
+      document.addEventListener('keydown', teclas, true);
+      fondo.addEventListener('click', function (e) {
+        if (e.target === fondo) cerrar(false);
+        var h = e.target.getAttribute && e.target.getAttribute('data-h');
+        if (h) cerrar(h === 'si');
+      });
+      fondo.querySelector('[data-h="si"]').focus({ preventScroll: true });
+    });
+  };
+
   App.descargar = function (datos, nombre, tipo) {
     var blob = new Blob([datos], { type: tipo || XLSX_MIME });
     var a = document.createElement('a');
@@ -415,9 +461,10 @@
         });
       } else if (b === 'limpiar') {
         var n = cfg.filas().length;
-        if (n && !confirm('¿Descartar los ' + n + ' movimientos capturados sin generar el Excel?')) return;
-        cfg.alVaciar();
-        estado.innerHTML = '<span class="muted">Captura limpia.</span>';
+        var borrar = function () { cfg.alVaciar(); estado.innerHTML = '<span class="muted">Captura limpia.</span>'; };
+        if (!n) borrar();
+        else App.confirmar({ titulo: '¿Borrar la captura?', texto: 'Se descartan ' + App.cuenta(n, 'movimiento capturado', 'movimientos capturados') + ' sin generar el Excel. No se puede deshacer.', aceptar: 'Borrar', peligro: true })
+          .then(function (ok) { if (ok) borrar(); });
       }
     });
   };
@@ -540,6 +587,7 @@
   }
 
   document.addEventListener('keydown', function (e) {
+    if (document.querySelector('.hoja-fondo')) { lect.buf = ''; return; } // con una confirmación abierta no se captura nada
     var ahora = performance.now();
     if (e.key && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
       if (!lect.buf || ahora - lect.tUlt > ESC.maxIntervalo) {
@@ -830,15 +878,18 @@
       }
       var claves = Object.keys(obj.datos).filter(function (k) { return /^af_/.test(k) && typeof obj.datos[k] === 'string'; });
       var fecha = obj.generado ? new Date(obj.generado).toLocaleString('es-MX') : 'fecha desconocida';
-      if (!confirm('¿Restaurar el respaldo del ' + fecha + '?\n\nTrae: ' + textoContenido(contenido(obj.datos)) +
-        '.\n\nReemplaza lo que hay ahora en este navegador (' + textoContenido(contenido(clavesAF().reduce(function (a, k) { a[k] = localStorage.getItem(k); return a; }, {}))) + ').')) return;
-      try {
-        clavesAF().forEach(function (k) { localStorage.removeItem(k); });
-        claves.forEach(function (k) { localStorage.setItem(k, obj.datos[k]); });
-      } catch (err) {
-        $('respaldoEstado').innerHTML = '<span class="err">No se pudo restaurar: ' + esc(err.message) + '</span>'; return;
-      }
-      location.reload();
+      return App.confirmar({ titulo: '¿Restaurar el respaldo del ' + fecha + '?', texto: 'Trae: ' + textoContenido(contenido(obj.datos)) +
+        '.\n\nReemplaza lo que hay ahora en este navegador: ' + textoContenido(contenido(clavesAF().reduce(function (a, k) { a[k] = localStorage.getItem(k); return a; }, {}))) + '.',
+        aceptar: 'Restaurar', peligro: true }).then(function (ok) {
+        if (!ok) return;
+        try {
+          clavesAF().forEach(function (k) { localStorage.removeItem(k); });
+          claves.forEach(function (k) { localStorage.setItem(k, obj.datos[k]); });
+        } catch (err) {
+          $('respaldoEstado').innerHTML = '<span class="err">No se pudo restaurar: ' + esc(err.message) + '</span>'; return;
+        }
+        location.reload();
+      });
     });
   });
 

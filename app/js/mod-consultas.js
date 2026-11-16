@@ -243,8 +243,8 @@
       } else if (accion === 'quitarAplicados') {
         var n = AF.seguimiento(App.maf, App.leerEnviados()).filter(function (s) { return s.estado === 'aplicado'; }).length;
         if (!n) return;
-        if (!confirm('¿Quitar del seguimiento los ' + n + ' movimientos ya aplicados en el MAF?')) return;
-        quitarEnviados(function (e, s) { return s.estado === 'aplicado'; });
+        App.confirmar({ titulo: '¿Quitar los aplicados?', texto: 'Se quitan del seguimiento los ' + n + ' movimientos que el MAF ya muestra aplicados.', aceptar: 'Quitar', peligro: true })
+          .then(function (ok) { if (ok) quitarEnviados(function (e, s) { return s.estado === 'aplicado'; }); });
       } else if (t.getAttribute('data-quitar-env')) {
         var clave = t.getAttribute('data-quitar-env');
         quitarEnviados(function (e) { return [e.tipo, e.noActivo, e.placa, e.crDestino].join('|') === clave; });

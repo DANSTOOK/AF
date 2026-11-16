@@ -201,6 +201,18 @@ function msg(r) { return [r.estado].concat(r.errores, r.advertencias).join(' | '
   try { await Writer.generarExcel(fs.readFileSync(rutaAnexo), muchas, 'ANEXO3'); } catch (e) { errLimite = e.message; }
   check('Anexo 3: más de 50 equipos se rechaza con aviso', /admite 50/.test(errLimite), errLimite);
 
+  console.log('\nSERIE DISTINTA A LA DEL MAF (alta)');
+  {
+    const lsd = new AF.Lote(maf, []);
+    const base = { tipo: 'ALTA', cr: conSerie.cr, placa: '09990001', noActivo: conSerie.noActivo, fecha: '16/11/2026' };
+    const rd = lsd.validar({ ...base, serie: 'SERIE-OTRA-123' });
+    check('Serie distinta: avisa sin bloquear', rd.estado === 'OK' && !!rd.serieDistinta && rd.advertencias.some(a => /no coincide con la del MAF/.test(a)), msg(rd));
+    const ri = lsd.validar({ ...base, serie: conSerie.serie });
+    check('Serie igual a la del MAF: sin aviso', ri.estado === 'OK' && !ri.serieDistinta, msg(ri));
+    const rv = lsd.validar({ ...base, serie: '' });
+    check('Sin serie capturada: sin aviso de serie distinta', rv.estado === 'OK' && !rv.serieDistinta, msg(rv));
+  }
+
   console.log('\nLEVANTAMIENTO DE TIENDA (Balsas 50038)');
   const lev = AF.levantamiento(maf, '50038', ['03543933', '3543933', '05625245', '09999999', '05625241', '']);
   check('Clasifica: correcta, otra tienda, no registrada; la repetida (sin cero) cuenta una vez',

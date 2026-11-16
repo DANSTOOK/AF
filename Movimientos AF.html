@@ -367,6 +367,28 @@
   .vacio-grande .ico { animation: flotar 3s ease-in-out infinite; }
   @keyframes flotar { 50% { transform: translateY(-6px); } }
 
+  /* Confirmaciones como hoja de iPhone: sube desde abajo con el fondo difuminado; en pantalla ancha, tarjeta centrada */
+  .hoja-fondo { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center; padding: 0;
+    background: rgba(0, 0, 0, 0); -webkit-backdrop-filter: blur(0); backdrop-filter: blur(0); transition: background-color 0.3s var(--curva), backdrop-filter 0.3s var(--curva); }
+  .hoja-fondo.abierta { background: rgba(0, 0, 0, 0.32); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  .hoja { width: 100%; max-width: 520px; box-sizing: border-box; background: var(--card); border-radius: 28px 28px 0 0; padding: 10px 20px calc(20px + env(safe-area-inset-bottom));
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2); transform: translateY(100%); transition: transform 0.38s cubic-bezier(0.32, 0.72, 0, 1); }
+  .hoja-fondo.abierta .hoja { transform: none; }
+  .hoja-fondo.cerrando .hoja { transform: translateY(100%); transition-duration: 0.25s; }
+  .hoja-asa { display: block; width: 36px; height: 5px; margin: 0 auto 14px; border-radius: 999px; background: rgba(120, 120, 128, 0.3); }
+  .hoja-titulo { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; text-align: center; }
+  .hoja-texto { margin-top: 8px; font-size: 15px; color: var(--muted); text-align: center; white-space: pre-line; }
+  .hoja-botones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+  .hoja-botones button { min-height: 50px; font-size: 17px; }
+  .hoja-botones .peligro { background: var(--rojo); color: #fff; box-shadow: 0 4px 14px rgba(255, 59, 48, 0.3); }
+  @media (min-width: 600px) {
+    .hoja-fondo { align-items: center; padding: 24px; }
+    .hoja { border-radius: 26px; padding-bottom: 20px; transform: translateY(24px) scale(0.96); opacity: 0; transition: transform 0.38s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.25s var(--curva); }
+    .hoja-fondo.abierta .hoja { transform: none; opacity: 1; }
+    .hoja-fondo.cerrando .hoja { transform: translateY(12px) scale(0.97); opacity: 0; }
+    .hoja-asa { display: none; }
+  }
+
   /* Teléfono: barra de pestañas abajo (como en iPhone) y formularios a lo ancho */
   @media (max-width: 599px) {
     #app { padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
@@ -1054,6 +1076,11 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
     fila.plaqueable = reg.plaqueable || 'S';
     fila.observaciones = texto(mov.observaciones);
     if (!fila.serie) res.advertencias.push('El equipo queda sin serie; captúrela si la tiene.');
+    // Serie capturada distinta a la que el MAF tiene para ese activo: puede ser otro equipo (se avisa, no se bloquea)
+    if (serie && reg.serie && llaveSerie(reg.serie) !== serie) {
+      res.serieDistinta = { capturada: texto(mov.serie).toUpperCase(), maf: reg.serie };
+      res.advertencias.push('La serie capturada (' + res.serieDistinta.capturada + ') no coincide con la del MAF (' + reg.serie + ') para el activo ' + reg.noActivo + '. Verifique que sea el mismo equipo.');
+    }
 
     if (reg.cr !== cr) {
       // Activo cargado en el MAF a otra tienda: ALTA en su CR del MAF + TRASPASO a la tienda real
@@ -2011,6 +2038,52 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
     }).join('') + '</div>';
   };
 
+  /**
+   * Confirmación como hoja de iPhone (sube desde abajo; en pantalla ancha, tarjeta centrada).
+   * opc: { titulo, texto, aceptar, cancelar, peligro }. Devuelve Promise<boolean>. Esc = cancelar, Enter = aceptar.
+   */
+  App.confirmar = function (opc) {
+    return new Promise(function (resolver) {
+      var antes = document.activeElement;
+      var fondo = document.createElement('div');
+      fondo.className = 'hoja-fondo';
+      fondo.innerHTML = '<div class="hoja" role="alertdialog" aria-modal="true" aria-labelledby="hojaTitulo"><span class="hoja-asa"></span>' +
+        '<div class="hoja-titulo" id="hojaTitulo">' + esc(opc.titulo || '¿Continuar?') + '</div>' +
+        (opc.texto ? '<div class="hoja-texto">' + esc(opc.texto) + '</div>' : '') +
+        '<div class="hoja-botones"><button data-h="no">' + esc(opc.cancelar || 'Cancelar') + '</button>' +
+        '<button data-h="si" class="' + (opc.peligro ? 'peligro' : 'palomita') + '">' + esc(opc.aceptar || 'Aceptar') + '</button></div></div>';
+      document.body.appendChild(fondo);
+      requestAnimationFrame(function () { fondo.classList.add('abierta'); });
+      setTimeout(function () { fondo.classList.add('abierta'); }, 30);
+      var hecho = false;
+      function cerrar(ok) {
+        if (hecho) return; hecho = true;
+        document.removeEventListener('keydown', teclas, true);
+        fondo.classList.remove('abierta'); fondo.classList.add('cerrando');
+        setTimeout(function () { fondo.remove(); if (antes && antes.focus) antes.focus({ preventScroll: true }); }, 260);
+        resolver(ok);
+      }
+      var ultimaTecla = 0;
+      function teclas(e) {
+        if (e.key && e.key.length === 1) { ultimaTecla = performance.now(); e.preventDefault(); e.stopPropagation(); return; } // un escaneo no escribe detrás de la hoja
+        if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cerrar(false); }
+        else if (e.key === 'Enter') {
+          e.preventDefault(); e.stopPropagation();
+          // El Enter que cierra un escaneo (llega pegado a los dígitos) no acepta la hoja; solo el Enter presionado a mano
+          if (performance.now() - ultimaTecla < 150) return;
+          if (document.activeElement && document.activeElement.getAttribute('data-h') === 'no') cerrar(false); else cerrar(true);
+        }
+      }
+      document.addEventListener('keydown', teclas, true);
+      fondo.addEventListener('click', function (e) {
+        if (e.target === fondo) cerrar(false);
+        var h = e.target.getAttribute && e.target.getAttribute('data-h');
+        if (h) cerrar(h === 'si');
+      });
+      fondo.querySelector('[data-h="si"]').focus({ preventScroll: true });
+    });
+  };
+
   App.descargar = function (datos, nombre, tipo) {
     var blob = new Blob([datos], { type: tipo || XLSX_MIME });
     var a = document.createElement('a');
@@ -2094,9 +2167,10 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
         });
       } else if (b === 'limpiar') {
         var n = cfg.filas().length;
-        if (n && !confirm('¿Descartar los ' + n + ' movimientos capturados sin generar el Excel?')) return;
-        cfg.alVaciar();
-        estado.innerHTML = '<span class="muted">Captura limpia.</span>';
+        var borrar = function () { cfg.alVaciar(); estado.innerHTML = '<span class="muted">Captura limpia.</span>'; };
+        if (!n) borrar();
+        else App.confirmar({ titulo: '¿Borrar la captura?', texto: 'Se descartan ' + App.cuenta(n, 'movimiento capturado', 'movimientos capturados') + ' sin generar el Excel. No se puede deshacer.', aceptar: 'Borrar', peligro: true })
+          .then(function (ok) { if (ok) borrar(); });
       }
     });
   };
@@ -2219,6 +2293,7 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
   }
 
   document.addEventListener('keydown', function (e) {
+    if (document.querySelector('.hoja-fondo')) { lect.buf = ''; return; } // con una confirmación abierta no se captura nada
     var ahora = performance.now();
     if (e.key && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
       if (!lect.buf || ahora - lect.tUlt > ESC.maxIntervalo) {
@@ -2509,15 +2584,18 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
       }
       var claves = Object.keys(obj.datos).filter(function (k) { return /^af_/.test(k) && typeof obj.datos[k] === 'string'; });
       var fecha = obj.generado ? new Date(obj.generado).toLocaleString('es-MX') : 'fecha desconocida';
-      if (!confirm('¿Restaurar el respaldo del ' + fecha + '?\n\nTrae: ' + textoContenido(contenido(obj.datos)) +
-        '.\n\nReemplaza lo que hay ahora en este navegador (' + textoContenido(contenido(clavesAF().reduce(function (a, k) { a[k] = localStorage.getItem(k); return a; }, {}))) + ').')) return;
-      try {
-        clavesAF().forEach(function (k) { localStorage.removeItem(k); });
-        claves.forEach(function (k) { localStorage.setItem(k, obj.datos[k]); });
-      } catch (err) {
-        $('respaldoEstado').innerHTML = '<span class="err">No se pudo restaurar: ' + esc(err.message) + '</span>'; return;
-      }
-      location.reload();
+      return App.confirmar({ titulo: '¿Restaurar el respaldo del ' + fecha + '?', texto: 'Trae: ' + textoContenido(contenido(obj.datos)) +
+        '.\n\nReemplaza lo que hay ahora en este navegador: ' + textoContenido(contenido(clavesAF().reduce(function (a, k) { a[k] = localStorage.getItem(k); return a; }, {}))) + '.',
+        aceptar: 'Restaurar', peligro: true }).then(function (ok) {
+        if (!ok) return;
+        try {
+          clavesAF().forEach(function (k) { localStorage.removeItem(k); });
+          claves.forEach(function (k) { localStorage.setItem(k, obj.datos[k]); });
+        } catch (err) {
+          $('respaldoEstado').innerHTML = '<span class="err">No se pudo restaurar: ' + esc(err.message) + '</span>'; return;
+        }
+        location.reload();
+      });
     });
   });
 
@@ -2586,8 +2664,8 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
     var anexo = cfg.formato === 'ANEXO3';
     var tipos = cfg.tipos;
     var lote = null;
-    // Anexo 3: cada placa trae su tienda (se pueden mezclar tiendas en un mismo formato); el CR capturado no la limita
-    var crPorPlaca = anexo;
+    // Bajas (Anexo 3 y V.2): cada placa trae su tienda (se pueden mezclar tiendas en un mismo formato); el CR capturado no la limita
+    function crPorPlaca() { return anexo || val('tipo') === 'BAJA'; }
 
     cont.classList.add('dos-col');
     cont.innerHTML =
@@ -2600,7 +2678,7 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
       '<label>Tienda <input data-c="tienda" size="30" list="listaTiendas"></label> ' +
       '<span data-c="plaza" class="muted"></span> ' +
       '<label>Fecha <input data-c="fecha" type="date"></label>' +
-      '<div class="muted">' + (crPorPlaca ? 'La tienda se toma de cada placa al escanearla. Solo hace falta elegirla para "Dar de baja varios equipos de la tienda".' : 'Si deja la tienda vacía, se llena sola con la de la placa.') + '</div></fieldset>' +
+      '<div class="muted">' + (anexo ? 'La tienda se toma de cada placa al escanearla. Solo hace falta elegirla para "Dar de baja varios equipos de la tienda".' : 'Si deja la tienda vacía, se llena sola con la de la placa.') + '</div></fieldset>' +
 
       '<fieldset><legend>2. ' + (anexo ? 'Datos de la baja y placa' : 'Datos y placa') + '</legend>' +
       '<div data-c="paso" class="paso"></div>' +
@@ -2623,7 +2701,7 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
       '<datalist id="equipos-' + cfg.modulo + '"></datalist> ' +
       '<label data-tipos="BAJA TRASPASO" title="Solo con el escáner; si hay cualquier advertencia, se detiene y pide la ✓"><input type="checkbox" data-c="auto"> Agregar sin ✓ al escanear si todo está bien</label></div>' +
       '<div class="muted" data-tipos="ALTA">Serie, marca y modelo son opcionales: vacíos = lo del MAF. La serie también sirve para encontrar el activo.</div>' +
-      '<div class="muted" data-tipos="BAJA">Serie y modelo son opcionales: vacíos = lo del MAF. El formato de bajas no tiene columna de marca.</div>' +
+      '<div class="muted" data-tipos="BAJA">La tienda se toma de cada placa (se pueden mezclar tiendas). Serie y modelo son opcionales: vacíos = lo del MAF. El formato de bajas no tiene columna de marca.</div>' +
       '<div class="muted" data-tipos="TRASPASO">El formato de transferencia solo lleva activo, placa, CR origen, CR destino y fecha: no tiene columnas de serie, marca ni modelo.</div>' +
       '<div data-c="pendientes" class="muted"></div>' +
       '<div data-c="vista" class="scroll"></div>' +
@@ -2711,7 +2789,7 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
 
     function movimiento(noActivo) {
       return {
-        tipo: val('tipo'), fecha: App.fechaTexto(val('fecha')), cr: crPorPlaca ? '' : val('cr'),
+        tipo: val('tipo'), fecha: App.fechaTexto(val('fecha')), cr: crPorPlaca() ? '' : val('cr'),
         placa: val('placa'), descripcion: val('descripcion'), serie: val('serie').trim().toUpperCase(),
         marca: val('marca').trim().toUpperCase(), modelo: val('modelo').trim().toUpperCase(), motivo: val('motivo'),
         crDestino: val('crDestino'), tiendaDestino: val('tiendaDestino'),
@@ -2723,7 +2801,7 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
 
     // Si el CR está vacío y la placa existe en el MAF, se llenan solos el CR y la tienda
     function crDesdePlaca() {
-      if (!crPorPlaca && AF.util.texto(val('cr'))) return;
+      if (!crPorPlaca() && AF.util.texto(val('cr'))) return;
       var regs = lote.buscarPlaca(val('placa'));
       if (regs.length !== 1 || regs[0].cr === AF.util.texto(val('cr')).toUpperCase()) return;
       q('cr').value = regs[0].cr;
@@ -2771,7 +2849,7 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
 
     App.registrarContexto(cfg.modulo, function () {
       var tipo = val('tipo'), cr = AF.util.texto(val('cr')).toUpperCase();
-      var partes = [anexo ? 'Baja Anexo 3' : NOM[tipo], crPorPlaca ? 'Tienda: la de cada placa' + (cr ? ' (última: ' + cr + ' ' + val('tienda') + ')' : '') : cr ? cr + ' ' + val('tienda') : 'Tienda: la de la placa'];
+      var partes = [anexo ? 'Baja Anexo 3' : NOM[tipo], crPorPlaca() ? 'Tienda: la de cada placa' + (cr ? ' (última: ' + cr + ' ' + val('tienda') + ')' : '') : cr ? cr + ' ' + val('tienda') : 'Tienda: la de la placa'];
       if (tipo === 'BAJA') partes.push(val('motivo') || 'sin tipo de baja');
       if (tipo === 'TRASPASO') partes.push(AF.util.texto(val('crDestino')) ? 'a ' + val('crDestino').toUpperCase() + ' ' + val('tiendaDestino') : 'destino sin capturar');
       if (val('fecha') !== App.hoyLocal()) partes.push('Fecha ' + App.fechaTexto(val('fecha')));
@@ -2936,7 +3014,10 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
       var lista = Array.from(masMarcados).filter(function (a) { return !lote.usadoEn('BAJA', a); });
       if (!lista.length) { q('resultado').innerHTML = '<div class="err">Marque los activos a dar de baja.</div>'; return; }
       if (!val('motivo')) { q('resultado').innerHTML = '<div class="err">Elija el tipo de baja.</div>'; return; }
-      if (!confirm('¿Agregar ' + lista.length + ' baja(s) como "' + val('motivo') + '"?')) return;
+      App.confirmar({ titulo: '¿Agregar ' + App.cuenta(lista.length, 'baja', 'bajas') + '?', texto: 'Tipo de baja: ' + val('motivo') + '.', aceptar: 'Agregar bajas' })
+        .then(function (ok) { if (ok) hacerMasiva(lista); });
+    }
+    function hacerMasiva(lista) {
       var hechos = 0, fallas = [];
       lista.forEach(function (a) {
         var mov = movimiento(a); mov.tipo = 'BAJA'; mov.placa = '';
@@ -3261,7 +3342,8 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
       var texto = 'Placa ' + placa + ' → activo ' + r.fila.noActivo + ' (' + r.fila.descripcion + ', CR ' + r.fila.cr + ' ' + r.fila.tienda + ')';
       q('resultado').innerHTML = '<div class="ok">✓ ' + esc(texto) + '</div>';
       var id = r.fila.id;
-      App.lectura('ok', '✓ ' + texto, function () {
+      if (r.serieDistinta) q('resultado').innerHTML += '<div class="warn">⚠ ' + esc(r.advertencias.filter(function (a) { return /no coincide con la del MAF/.test(a); })[0]) + '</div>';
+      App.lectura(r.serieDistinta ? 'aviso' : 'ok', (r.serieDistinta ? '⚠ Serie distinta a la del MAF — ' : '✓ ') + texto, function () {
         lote.eliminar(id); guardar();
         q('resultado').innerHTML = ''; elegido = null;
         pintar();
@@ -3278,7 +3360,13 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
 
     // Aquí el escáner SÍ casa al leer (Enter): es el propósito del módulo. Se deshace con "Quitar".
     q('placa').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); casar(); } });
-    function serieLeida() { App.lectura('ok', 'Serie ' + val('serie') + ' — ahora escanee la placa.'); q('placa').focus(); }
+    function serieLeida() {
+      var sig = lote ? siguiente(equipos()) : null;
+      if (sig && sig.reg.serie && AF.util.llaveSerie(sig.reg.serie) !== AF.util.llaveSerie(val('serie'))) {
+        App.lectura('aviso', '⚠ La serie ' + val('serie') + ' no coincide con la del MAF (' + sig.reg.serie + ') para el activo ' + sig.reg.noActivo + '. Verifique el equipo; si es correcto, escanee la placa.');
+      } else App.lectura('ok', 'Serie ' + val('serie') + ' — ahora escanee la placa.');
+      q('placa').focus();
+    }
     q('serie').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); serieLeida(); } });
     ['marca', 'modelo'].forEach(function (c) {
       q(c).addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); q('placa').focus(); } });
@@ -3555,7 +3643,12 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
       pasoAlta();
     }
     function serieLeida() {
-      App.lectura('ok', 'Serie ' + val('serie') + '. Revise marca y modelo y presione ✓ Dar de alta (o Enter).');
+      var r = regElegido();
+      if (r && r.serie && AF.util.llaveSerie(r.serie) !== AF.util.llaveSerie(val('serie'))) {
+        var txt = 'La serie ' + val('serie') + ' no coincide con la del MAF (' + r.serie + ') para el activo ' + r.noActivo + '. Verifique que sea el mismo equipo; si sí, presione ✓ Dar de alta.';
+        msgAlta('warn', [txt]);
+        App.lectura('aviso', '⚠ ' + txt);
+      } else App.lectura('ok', 'Serie ' + val('serie') + '. Revise marca y modelo y presione ✓ Dar de alta (o Enter).');
       cont.querySelector('[data-accion="alta"]').focus();
       pasoAlta();
     }
@@ -3572,7 +3665,7 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
       var avisos = r.advertencias.filter(function (a) { return !/^Asignado al único/.test(a); });
       msgAlta('ok', ['Alta: placa ' + f.placa + ' → activo ' + f.noActivo + ' (' + f.descripcion + ')']);
       if (avisos.length) q('msgAlta').innerHTML += avisos.map(function (a) { return '<div class="warn">⚠ ' + esc(a) + '</div>'; }).join('');
-      App.lectura('ok', '✓ Alta: placa ' + f.placa + ' → activo ' + f.noActivo + ' (' + f.descripcion + ')', function () {
+      App.lectura(r.serieDistinta ? 'aviso' : 'ok', (r.serieDistinta ? '⚠ Alta con serie distinta a la del MAF: ' : '✓ Alta: ') + 'placa ' + f.placa + ' → activo ' + f.noActivo + ' (' + f.descripcion + ')', function () {
         lote.eliminar(f.id); guardarLote();
         elegido = f.noActivo; editorDe = '';
         q('msgAlta').innerHTML = '';
@@ -3842,13 +3935,17 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
         q('placa').focus();
       } else if (accion === 'nuevo') {
         var n = lev.placas.length;
-        if (n && !confirm('¿Empezar un levantamiento nuevo? Se borran las ' + n + ' placas escaneadas (los movimientos ya generados se quedan).')) return;
-        lev = { cr: '', fecha: val('fecha'), placas: [] };
-        marcados.clear(); borrador = {}; filtroFaltan = '';
-        guardarLev();
-        q('ultimo').innerHTML = ''; q('msg').innerHTML = '';
-        pintar();
-        q('placaRev').focus();
+        var empezar = function () {
+          lev = { cr: '', fecha: val('fecha'), placas: [] };
+          marcados.clear(); borrador = {}; filtroFaltan = '';
+          guardarLev();
+          q('ultimo').innerHTML = ''; q('msg').innerHTML = '';
+          pintar();
+          q('placaRev').focus();
+        };
+        if (!n) empezar();
+        else App.confirmar({ titulo: '¿Empezar un levantamiento nuevo?', texto: 'Se borran las ' + n + ' placas escaneadas. Los movimientos ya generados se quedan.', aceptar: 'Empezar de nuevo', peligro: true })
+          .then(function (ok) { if (ok) empezar(); });
       } else if (accion === 'agregarLista') {
         var placas = AF.parsearLista(App.maf, val('lista')).map(function (e) { return e.placa || e.noActivo; });
         if (!placas.length) { q('ultimo').innerHTML = '<span class="err">No se encontraron placas en el texto.</span>'; return; }
@@ -3865,10 +3962,13 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
       } else if (accion === 'bajas') {
         var lista = Array.from(marcados).filter(function (a) { return !lote.usadoEn('BAJA', a); });
         if (!lista.length) { q('msg').innerHTML = '<div class="err">Marque los activos a dar de baja.</div>'; return; }
-        if (!confirm('¿Agregar ' + lista.length + ' baja(s) como "' + motivoFaltan + '"?')) return;
-        var res = lista.map(function (a) { return lote.agregar({ tipo: 'BAJA', noActivo: a, cr: ultimo.cr, motivo: motivoFaltan, fecha: fecha() }); });
-        marcados.clear();
-        mostrar(res);
+        App.confirmar({ titulo: '¿Agregar ' + App.cuenta(lista.length, 'baja', 'bajas') + '?', texto: 'Tipo de baja: ' + motivoFaltan + '.', aceptar: 'Agregar bajas' })
+          .then(function (ok) {
+            if (!ok) return;
+            var res = lista.map(function (a) { return lote.agregar({ tipo: 'BAJA', noActivo: a, cr: ultimo.cr, motivo: motivoFaltan, fecha: fecha() }); });
+            marcados.clear();
+            mostrar(res);
+          });
       } else if (accion === 'exportar') {
         exportar();
       } else if (t.getAttribute('data-tras')) {
@@ -4212,8 +4312,8 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
       } else if (accion === 'quitarAplicados') {
         var n = AF.seguimiento(App.maf, App.leerEnviados()).filter(function (s) { return s.estado === 'aplicado'; }).length;
         if (!n) return;
-        if (!confirm('¿Quitar del seguimiento los ' + n + ' movimientos ya aplicados en el MAF?')) return;
-        quitarEnviados(function (e, s) { return s.estado === 'aplicado'; });
+        App.confirmar({ titulo: '¿Quitar los aplicados?', texto: 'Se quitan del seguimiento los ' + n + ' movimientos que el MAF ya muestra aplicados.', aceptar: 'Quitar', peligro: true })
+          .then(function (ok) { if (ok) quitarEnviados(function (e, s) { return s.estado === 'aplicado'; }); });
       } else if (t.getAttribute('data-quitar-env')) {
         var clave = t.getAttribute('data-quitar-env');
         quitarEnviados(function (e) { return [e.tipo, e.noActivo, e.placa, e.crDestino].join('|') === clave; });

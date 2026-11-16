@@ -37,8 +37,8 @@
     var anexo = cfg.formato === 'ANEXO3';
     var tipos = cfg.tipos;
     var lote = null;
-    // Anexo 3: cada placa trae su tienda (se pueden mezclar tiendas en un mismo formato); el CR capturado no la limita
-    var crPorPlaca = anexo;
+    // Bajas (Anexo 3 y V.2): cada placa trae su tienda (se pueden mezclar tiendas en un mismo formato); el CR capturado no la limita
+    function crPorPlaca() { return anexo || val('tipo') === 'BAJA'; }
 
     cont.classList.add('dos-col');
     cont.innerHTML =
@@ -51,7 +51,7 @@
       '<label>Tienda <input data-c="tienda" size="30" list="listaTiendas"></label> ' +
       '<span data-c="plaza" class="muted"></span> ' +
       '<label>Fecha <input data-c="fecha" type="date"></label>' +
-      '<div class="muted">' + (crPorPlaca ? 'La tienda se toma de cada placa al escanearla. Solo hace falta elegirla para "Dar de baja varios equipos de la tienda".' : 'Si deja la tienda vacía, se llena sola con la de la placa.') + '</div></fieldset>' +
+      '<div class="muted">' + (anexo ? 'La tienda se toma de cada placa al escanearla. Solo hace falta elegirla para "Dar de baja varios equipos de la tienda".' : 'Si deja la tienda vacía, se llena sola con la de la placa.') + '</div></fieldset>' +
 
       '<fieldset><legend>2. ' + (anexo ? 'Datos de la baja y placa' : 'Datos y placa') + '</legend>' +
       '<div data-c="paso" class="paso"></div>' +
@@ -74,7 +74,7 @@
       '<datalist id="equipos-' + cfg.modulo + '"></datalist> ' +
       '<label data-tipos="BAJA TRASPASO" title="Solo con el escáner; si hay cualquier advertencia, se detiene y pide la ✓"><input type="checkbox" data-c="auto"> Agregar sin ✓ al escanear si todo está bien</label></div>' +
       '<div class="muted" data-tipos="ALTA">Serie, marca y modelo son opcionales: vacíos = lo del MAF. La serie también sirve para encontrar el activo.</div>' +
-      '<div class="muted" data-tipos="BAJA">Serie y modelo son opcionales: vacíos = lo del MAF. El formato de bajas no tiene columna de marca.</div>' +
+      '<div class="muted" data-tipos="BAJA">La tienda se toma de cada placa (se pueden mezclar tiendas). Serie y modelo son opcionales: vacíos = lo del MAF. El formato de bajas no tiene columna de marca.</div>' +
       '<div class="muted" data-tipos="TRASPASO">El formato de transferencia solo lleva activo, placa, CR origen, CR destino y fecha: no tiene columnas de serie, marca ni modelo.</div>' +
       '<div data-c="pendientes" class="muted"></div>' +
       '<div data-c="vista" class="scroll"></div>' +
@@ -162,7 +162,7 @@
 
     function movimiento(noActivo) {
       return {
-        tipo: val('tipo'), fecha: App.fechaTexto(val('fecha')), cr: crPorPlaca ? '' : val('cr'),
+        tipo: val('tipo'), fecha: App.fechaTexto(val('fecha')), cr: crPorPlaca() ? '' : val('cr'),
         placa: val('placa'), descripcion: val('descripcion'), serie: val('serie').trim().toUpperCase(),
         marca: val('marca').trim().toUpperCase(), modelo: val('modelo').trim().toUpperCase(), motivo: val('motivo'),
         crDestino: val('crDestino'), tiendaDestino: val('tiendaDestino'),
@@ -174,7 +174,7 @@
 
     // Si el CR está vacío y la placa existe en el MAF, se llenan solos el CR y la tienda
     function crDesdePlaca() {
-      if (!crPorPlaca && AF.util.texto(val('cr'))) return;
+      if (!crPorPlaca() && AF.util.texto(val('cr'))) return;
       var regs = lote.buscarPlaca(val('placa'));
       if (regs.length !== 1 || regs[0].cr === AF.util.texto(val('cr')).toUpperCase()) return;
       q('cr').value = regs[0].cr;
@@ -222,7 +222,7 @@
 
     App.registrarContexto(cfg.modulo, function () {
       var tipo = val('tipo'), cr = AF.util.texto(val('cr')).toUpperCase();
-      var partes = [anexo ? 'Baja Anexo 3' : NOM[tipo], crPorPlaca ? 'Tienda: la de cada placa' + (cr ? ' (última: ' + cr + ' ' + val('tienda') + ')' : '') : cr ? cr + ' ' + val('tienda') : 'Tienda: la de la placa'];
+      var partes = [anexo ? 'Baja Anexo 3' : NOM[tipo], crPorPlaca() ? 'Tienda: la de cada placa' + (cr ? ' (última: ' + cr + ' ' + val('tienda') + ')' : '') : cr ? cr + ' ' + val('tienda') : 'Tienda: la de la placa'];
       if (tipo === 'BAJA') partes.push(val('motivo') || 'sin tipo de baja');
       if (tipo === 'TRASPASO') partes.push(AF.util.texto(val('crDestino')) ? 'a ' + val('crDestino').toUpperCase() + ' ' + val('tiendaDestino') : 'destino sin capturar');
       if (val('fecha') !== App.hoyLocal()) partes.push('Fecha ' + App.fechaTexto(val('fecha')));
@@ -387,7 +387,10 @@
       var lista = Array.from(masMarcados).filter(function (a) { return !lote.usadoEn('BAJA', a); });
       if (!lista.length) { q('resultado').innerHTML = '<div class="err">Marque los activos a dar de baja.</div>'; return; }
       if (!val('motivo')) { q('resultado').innerHTML = '<div class="err">Elija el tipo de baja.</div>'; return; }
-      if (!confirm('¿Agregar ' + lista.length + ' baja(s) como "' + val('motivo') + '"?')) return;
+      App.confirmar({ titulo: '¿Agregar ' + App.cuenta(lista.length, 'baja', 'bajas') + '?', texto: 'Tipo de baja: ' + val('motivo') + '.', aceptar: 'Agregar bajas' })
+        .then(function (ok) { if (ok) hacerMasiva(lista); });
+    }
+    function hacerMasiva(lista) {
       var hechos = 0, fallas = [];
       lista.forEach(function (a) {
         var mov = movimiento(a); mov.tipo = 'BAJA'; mov.placa = '';

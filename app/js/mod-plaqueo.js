@@ -163,7 +163,8 @@
       var texto = 'Placa ' + placa + ' → activo ' + r.fila.noActivo + ' (' + r.fila.descripcion + ', CR ' + r.fila.cr + ' ' + r.fila.tienda + ')';
       q('resultado').innerHTML = '<div class="ok">✓ ' + esc(texto) + '</div>';
       var id = r.fila.id;
-      App.lectura('ok', '✓ ' + texto, function () {
+      if (r.serieDistinta) q('resultado').innerHTML += '<div class="warn">⚠ ' + esc(r.advertencias.filter(function (a) { return /no coincide con la del MAF/.test(a); })[0]) + '</div>';
+      App.lectura(r.serieDistinta ? 'aviso' : 'ok', (r.serieDistinta ? '⚠ Serie distinta a la del MAF — ' : '✓ ') + texto, function () {
         lote.eliminar(id); guardar();
         q('resultado').innerHTML = ''; elegido = null;
         pintar();
@@ -180,7 +181,13 @@
 
     // Aquí el escáner SÍ casa al leer (Enter): es el propósito del módulo. Se deshace con "Quitar".
     q('placa').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); casar(); } });
-    function serieLeida() { App.lectura('ok', 'Serie ' + val('serie') + ' — ahora escanee la placa.'); q('placa').focus(); }
+    function serieLeida() {
+      var sig = lote ? siguiente(equipos()) : null;
+      if (sig && sig.reg.serie && AF.util.llaveSerie(sig.reg.serie) !== AF.util.llaveSerie(val('serie'))) {
+        App.lectura('aviso', '⚠ La serie ' + val('serie') + ' no coincide con la del MAF (' + sig.reg.serie + ') para el activo ' + sig.reg.noActivo + '. Verifique el equipo; si es correcto, escanee la placa.');
+      } else App.lectura('ok', 'Serie ' + val('serie') + ' — ahora escanee la placa.');
+      q('placa').focus();
+    }
     q('serie').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); serieLeida(); } });
     ['marca', 'modelo'].forEach(function (c) {
       q(c).addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); q('placa').focus(); } });

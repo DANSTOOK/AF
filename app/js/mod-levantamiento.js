@@ -213,7 +213,12 @@
       pasoAlta();
     }
     function serieLeida() {
-      App.lectura('ok', 'Serie ' + val('serie') + '. Revise marca y modelo y presione ✓ Dar de alta (o Enter).');
+      var r = regElegido();
+      if (r && r.serie && AF.util.llaveSerie(r.serie) !== AF.util.llaveSerie(val('serie'))) {
+        var txt = 'La serie ' + val('serie') + ' no coincide con la del MAF (' + r.serie + ') para el activo ' + r.noActivo + '. Verifique que sea el mismo equipo; si sí, presione ✓ Dar de alta.';
+        msgAlta('warn', [txt]);
+        App.lectura('aviso', '⚠ ' + txt);
+      } else App.lectura('ok', 'Serie ' + val('serie') + '. Revise marca y modelo y presione ✓ Dar de alta (o Enter).');
       cont.querySelector('[data-accion="alta"]').focus();
       pasoAlta();
     }
@@ -230,7 +235,7 @@
       var avisos = r.advertencias.filter(function (a) { return !/^Asignado al único/.test(a); });
       msgAlta('ok', ['Alta: placa ' + f.placa + ' → activo ' + f.noActivo + ' (' + f.descripcion + ')']);
       if (avisos.length) q('msgAlta').innerHTML += avisos.map(function (a) { return '<div class="warn">⚠ ' + esc(a) + '</div>'; }).join('');
-      App.lectura('ok', '✓ Alta: placa ' + f.placa + ' → activo ' + f.noActivo + ' (' + f.descripcion + ')', function () {
+      App.lectura(r.serieDistinta ? 'aviso' : 'ok', (r.serieDistinta ? '⚠ Alta con serie distinta a la del MAF: ' : '✓ Alta: ') + 'placa ' + f.placa + ' → activo ' + f.noActivo + ' (' + f.descripcion + ')', function () {
         lote.eliminar(f.id); guardarLote();
         elegido = f.noActivo; editorDe = '';
         q('msgAlta').innerHTML = '';
@@ -500,13 +505,17 @@
         q('placa').focus();
       } else if (accion === 'nuevo') {
         var n = lev.placas.length;
-        if (n && !confirm('¿Empezar un levantamiento nuevo? Se borran las ' + n + ' placas escaneadas (los movimientos ya generados se quedan).')) return;
-        lev = { cr: '', fecha: val('fecha'), placas: [] };
-        marcados.clear(); borrador = {}; filtroFaltan = '';
-        guardarLev();
-        q('ultimo').innerHTML = ''; q('msg').innerHTML = '';
-        pintar();
-        q('placaRev').focus();
+        var empezar = function () {
+          lev = { cr: '', fecha: val('fecha'), placas: [] };
+          marcados.clear(); borrador = {}; filtroFaltan = '';
+          guardarLev();
+          q('ultimo').innerHTML = ''; q('msg').innerHTML = '';
+          pintar();
+          q('placaRev').focus();
+        };
+        if (!n) empezar();
+        else App.confirmar({ titulo: '¿Empezar un levantamiento nuevo?', texto: 'Se borran las ' + n + ' placas escaneadas. Los movimientos ya generados se quedan.', aceptar: 'Empezar de nuevo', peligro: true })
+          .then(function (ok) { if (ok) empezar(); });
       } else if (accion === 'agregarLista') {
         var placas = AF.parsearLista(App.maf, val('lista')).map(function (e) { return e.placa || e.noActivo; });
         if (!placas.length) { q('ultimo').innerHTML = '<span class="err">No se encontraron placas en el texto.</span>'; return; }
@@ -523,10 +532,13 @@
       } else if (accion === 'bajas') {
         var lista = Array.from(marcados).filter(function (a) { return !lote.usadoEn('BAJA', a); });
         if (!lista.length) { q('msg').innerHTML = '<div class="err">Marque los activos a dar de baja.</div>'; return; }
-        if (!confirm('¿Agregar ' + lista.length + ' baja(s) como "' + motivoFaltan + '"?')) return;
-        var res = lista.map(function (a) { return lote.agregar({ tipo: 'BAJA', noActivo: a, cr: ultimo.cr, motivo: motivoFaltan, fecha: fecha() }); });
-        marcados.clear();
-        mostrar(res);
+        App.confirmar({ titulo: '¿Agregar ' + App.cuenta(lista.length, 'baja', 'bajas') + '?', texto: 'Tipo de baja: ' + motivoFaltan + '.', aceptar: 'Agregar bajas' })
+          .then(function (ok) {
+            if (!ok) return;
+            var res = lista.map(function (a) { return lote.agregar({ tipo: 'BAJA', noActivo: a, cr: ultimo.cr, motivo: motivoFaltan, fecha: fecha() }); });
+            marcados.clear();
+            mostrar(res);
+          });
       } else if (accion === 'exportar') {
         exportar();
       } else if (t.getAttribute('data-tras')) {
