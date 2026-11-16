@@ -1,0 +1,12 @@
+# Dependencias (se reinstalan con npm install en app/)
+node_modules/
+
+# Archivos que generan las pruebas o se usan de forma temporal
+app/test/salida-*.xlsx
+app/test/maf-tmp.xlsx
+app/test/tmp-*
+
+# Respaldos de captura y archivos MAF: son datos, no código
+*.json.bak
+Respaldo Activo Fijo *.json
+MAF*.xlsx

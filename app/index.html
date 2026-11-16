@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Movimientos Activo Fijo</title>
+<style>
+  /* ===== Tokens (sistema de diseño iOS: superficies agrupadas, colores de sistema, curva Apple) ===== */
+  :root {
+    color-scheme: light;
+    --fuente: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, "Segoe UI", sans-serif;
+    --bg: #F2F2F7;            /* systemGroupedBackground */
+    --card: #FFFFFF;          /* secondarySystemGroupedBackground */
+    --campo: #F2F2F7;         /* inputs dentro de tarjetas */
+    --anidado: #F2F2F7;       /* bloques dentro de una tarjeta */
+    --fg: #000000;
+    --muted: #8E8E93;         /* secondaryLabel */
+    --sep: rgba(60, 60, 67, 0.12);
+    --relleno: rgba(120, 120, 128, 0.12);   /* fondo de segmented controls y botones secundarios */
+    --switch: #E9E9EA;
+    --vidrio: rgba(255, 255, 255, 0.75);
+    --azul: #007AFF; --verde: #34C759; --rojo: #FF3B30; --naranja: #FF9500;
+    --err: #D70015; --warn: #B25000; --ok: #248A3D;   /* texto legible sobre blanco */
+    --sel: rgba(0, 122, 255, 0.10);
+    --sombra: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.045);
+    --pastilla: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
+    --curva: cubic-bezier(0.32, 0.72, 0, 1);
+    --line: var(--sep);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #000000; --card: #1C1C1E; --campo: #2C2C2E; --anidado: #2C2C2E; --fg: #FFFFFF; --muted: #8E8E93;
+      --sep: rgba(84, 84, 88, 0.36); --relleno: rgba(120, 120, 128, 0.24); --switch: #39393D; --vidrio: rgba(28, 28, 30, 0.75);
+      --azul: #0A84FF; --verde: #30D158; --rojo: #FF453A; --naranja: #FF9F0A;
+      --err: #FF453A; --warn: #FF9F0A; --ok: #30D158; --sel: rgba(10, 132, 255, 0.20);
+      --sombra: 0 0 0 1px rgba(255, 255, 255, 0.06); --pastilla: 0 3px 8px rgba(0, 0, 0, 0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #000000; --card: #1C1C1E; --campo: #2C2C2E; --anidado: #2C2C2E; --fg: #FFFFFF; --muted: #8E8E93;
+    --sep: rgba(84, 84, 88, 0.36); --relleno: rgba(120, 120, 128, 0.24); --switch: #39393D; --vidrio: rgba(28, 28, 30, 0.75);
+    --azul: #0A84FF; --verde: #30D158; --rojo: #FF453A; --naranja: #FF9F0A;
+    --err: #FF453A; --warn: #FF9F0A; --ok: #30D158; --sel: rgba(10, 132, 255, 0.20);
+    --sombra: 0 0 0 1px rgba(255, 255, 255, 0.06); --pastilla: 0 3px 8px rgba(0, 0, 0, 0.4);
+  }
+
+  /* ===== Base y tipografía ===== */
+  html { background: var(--bg); }
+  body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+    font: 16px/1.35 var(--fuente); -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums; }
+  h1 { font-size: 34px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; margin: 22px 0 14px; }
+  h3 { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; margin: 16px 0 6px; }
+  a { color: var(--azul); }
+  .err { color: var(--err); } .warn { color: var(--warn); } .ok { color: var(--ok); } .muted { color: var(--muted); }
+  .muted { font-size: 14px; }
+  .oculto { display: none !important; }
+  b { font-weight: 600; }
+
+  /* ===== Tarjetas (fieldset) y bloques plegables (details) ===== */
+  fieldset { background: var(--card); border: 0; border-radius: 22px; padding: 16px 18px 18px; margin: 0 0 16px; min-width: 0; box-shadow: var(--sombra); }
+  legend { float: left; width: 100%; padding: 0; margin: 0 0 10px; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+  details { background: var(--card); border-radius: 22px; margin: 0 0 16px; padding: 0 18px; box-shadow: var(--sombra); }
+  details[open] { padding-bottom: 16px; }
+  summary { list-style: none; cursor: pointer; min-height: 50px; display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600;
+    -webkit-user-select: none; user-select: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '›'; margin-left: auto; color: var(--muted); font-size: 24px; font-weight: 400; line-height: 1; transition: transform 0.3s var(--curva); }
+  details[open] > summary::after { transform: rotate(90deg); }
+  fieldset details, details details { background: var(--anidado); box-shadow: none; border-radius: 14px; padding: 0 14px; margin: 10px 0; }
+  fieldset details[open], details details[open] { padding-bottom: 12px; }
+  details > fieldset { background: transparent; box-shadow: none; padding: 0; margin: 0; border-radius: 0; }
+
+  /* ===== Formularios ===== */
+  label { display: inline-flex; align-items: center; gap: 8px; margin: 6px 14px 6px 0; font-size: 15px; vertical-align: middle; }
+  input, select, button, textarea { font: inherit; }
+  input:not([type]), input[type="text"], input[type="search"], input[type="date"], select, textarea {
+    font-size: 16px; color: var(--fg); background: var(--campo); border: 0; border-radius: 12px; min-height: 44px; padding: 0 12px;
+    outline: none; max-width: 100%; box-sizing: border-box; transition: box-shadow 0.2s var(--curva); }
+  textarea { padding: 10px 12px; line-height: 1.4; }
+  select { -webkit-appearance: none; appearance: none; padding-right: 34px; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%238E8E93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center; }
+  input:focus-visible, select:focus-visible, textarea:focus-visible { box-shadow: 0 0 0 3px var(--sel), 0 0 0 1px var(--azul) inset; }
+  input:disabled, select:disabled { opacity: 0.5; }
+  ::placeholder { color: var(--muted); opacity: 1; }
+  input[type="file"] { font-size: 15px; color: var(--muted); max-width: 100%; }
+  input[type="file"]::file-selector-button { font: inherit; font-weight: 600; color: #fff; background: var(--azul); border: 0; border-radius: 14px;
+    min-height: 44px; padding: 0 18px; margin-right: 12px; cursor: pointer; transition: transform 0.15s ease-out; }
+  input[type="file"]::file-selector-button:active { transform: scale(0.97); }
+
+  /* Interruptores iOS para opciones (casillas dentro de una etiqueta); las casillas de selección en tablas quedan como casillas */
+  label > input[type="checkbox"] { -webkit-appearance: none; appearance: none; position: relative; flex: 0 0 auto; width: 51px; height: 31px; margin: 0;
+    border-radius: 999px; background: var(--switch); cursor: pointer; transition: background-color 0.25s var(--curva); }
+  label > input[type="checkbox"]::before { content: ''; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 1px 1px rgba(0, 0, 0, 0.16); transition: transform 0.3s var(--curva); }
+  label > input[type="checkbox"]:checked { background: var(--verde); }
+  label > input[type="checkbox"]:checked::before { transform: translateX(20px); }
+  label > input[type="checkbox"]:focus-visible { box-shadow: 0 0 0 3px var(--sel); outline: none; }
+  input[type="checkbox"] { accent-color: var(--azul); width: 20px; height: 20px; }
+
+  /* ===== Botones ===== */
+  button { font-size: 16px; font-weight: 600; color: var(--azul); background: var(--relleno); border: 0; border-radius: 14px; min-height: 44px; padding: 0 16px;
+    cursor: pointer; vertical-align: middle; -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s ease-out, opacity 0.15s ease-out, background-color 0.2s var(--curva); }
+  button:hover { filter: brightness(0.97); }
+  button:active { transform: scale(0.97); opacity: 0.85; }
+  button:disabled { opacity: 0.4; cursor: default; }
+  button:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--sel); }
+  .palomita, .botones button[data-b="guardar"] { background: var(--azul); color: #fff; }
+  .botones button[data-b="limpiar"] { color: var(--rojo); }
+  .botones { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0 4px; }
+  [data-b="resumen"] { flex: 1 0 100%; font-size: 14px; color: var(--muted); }
+  [data-b="estado"] { flex: 1 0 100%; font-size: 14px; }
+  td button { min-height: 32px; padding: 0 12px; border-radius: 999px; font-size: 13px; }
+
+  /* Segmented controls: tipo de movimiento y vistas de consultas */
+  .opciones, [data-c="vistas"] { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; margin: 0 0 12px; background: var(--relleno); border-radius: 999px; }
+  .opciones button, [data-c="vistas"] button { min-height: 36px; padding: 0 16px; border-radius: 999px; background: transparent; color: var(--fg); font-weight: 500; font-size: 15px; }
+  .opciones button.activo, [data-c="vistas"] button[style*="bold"] { background: var(--card); box-shadow: var(--pastilla); font-weight: 600; }
+
+  /* ===== Tablas como listas agrupadas ===== */
+  table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; margin: 8px 0; background: var(--card); }
+  th, td { padding: 9px 10px; text-align: left; border: 0; border-bottom: 1px solid var(--sep); vertical-align: middle; }
+  tr:last-child > td { border-bottom: 0; }
+  th { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.02em; white-space: nowrap; }
+  tr.actual > td { background: var(--sel); }
+  .col-der td, td.ok, td.warn, td.err, td.muted { white-space: nowrap; }
+  td input:not([type]), td input[type="text"], td select { min-height: 32px; border-radius: 8px; font-size: 14px; padding: 0 8px; }
+  .scroll { overflow: auto; max-height: 70vh; border-radius: 14px; box-shadow: inset 0 0 0 1px var(--sep); margin: 8px 0; }
+  .scroll > table, .scroll table { margin: 0; background: transparent; }
+  .scroll th { position: sticky; top: 0; z-index: 1; background: var(--card); box-shadow: inset 0 -1px 0 var(--sep); }
+  [data-c="detP"] { scroll-margin-top: var(--arriba, 80px); }
+
+  /* ===== Estructura: barra lateral (iPad) en pantallas anchas; en angostas todo en columna con pestañas fijas arriba ===== */
+  #app { padding: 0 16px 24px; }
+  #lateral { display: contents; }
+  #principal { min-width: 0; }
+  #marca { display: flex; align-items: center; gap: 12px; padding: 18px 2px 14px; }
+  .logo { flex: 0 0 auto; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 17px; letter-spacing: -0.02em;
+    background: linear-gradient(145deg, #0A84FF, #5E5CE6); box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3); }
+  #marca b { display: block; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+  #marca span { font-size: 13px; color: var(--muted); }
+
+  /* Íconos de módulo: insignia cuadrada redondeada con color propio */
+  .ico { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 8px; display: inline-grid; place-items: center; color: #fff; background: var(--c, var(--azul)); }
+  .ico svg { width: 18px; height: 18px; }
+  .m-movimientos { --c: #007AFF; } .m-plaqueo { --c: #FF9500; } .m-anexo3 { --c: #FF3B30; } .m-levantamiento { --c: #5856D6; } .m-consultas { --c: #32ADE6; }
+
+  /* Navegación: en angosto, fichas que se desplazan de lado y se quedan arriba */
+  #nav { position: sticky; top: 0; z-index: 6; display: flex; gap: 6px; margin: 0 -16px; padding: 10px 16px; overflow-x: auto; scrollbar-width: none;
+    background: var(--vidrio); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); border-bottom: 1px solid var(--sep); }
+  #nav::-webkit-scrollbar { display: none; }
+  #nav a { position: relative; z-index: 1; flex: 0 0 auto; display: flex; align-items: center; gap: 8px; white-space: nowrap; padding: 8px 14px; border-radius: 999px;
+    color: var(--fg); background: var(--relleno); text-decoration: none; font-size: 14px; font-weight: 500;
+    transition: color 0.3s var(--curva), background-color 0.3s var(--curva), transform 0.15s ease-out; }
+  #nav a .ico { display: none; }
+  #nav a:active { transform: scale(0.97); }
+  #nav a.activa { color: #fff; background: transparent; font-weight: 600; }
+  .badge { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; display: inline-grid; place-items: center; font-size: 12px; font-weight: 600;
+    background: var(--rojo); color: #fff; box-sizing: border-box; }
+  .nav-ind { position: absolute; top: 0; left: 0; width: 0; height: 0; border-radius: 999px; background: var(--azul);
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25); transition: transform 0.38s var(--curva), width 0.38s var(--curva), height 0.38s var(--curva); }
+
+  /* Encabezado del módulo (título grande + qué se está capturando), fijo al bajar */
+  #barra { position: sticky; top: var(--nav-alto, 0px); z-index: 5; margin: 0 -16px 6px; padding: 12px 16px 10px; background: var(--vidrio);
+    -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); }
+  #tituloModulo { display: flex; align-items: center; gap: 12px; font-size: 28px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; }
+  #tituloModulo .ico { width: 40px; height: 40px; border-radius: 11px; }
+  #tituloModulo .ico svg { width: 22px; height: 22px; }
+  #franja { margin-top: 10px; padding: 8px 12px; border-radius: 12px; background: var(--sel); font-size: 14px; font-weight: 600; }
+  #franja:empty { display: none; }
+  #ayudaModulo { margin: 4px 4px 16px; font-size: 15px; }
+
+  /* Estado vacío (sin MAF) */
+  .vacio-grande { text-align: center; padding: 56px 24px; background: var(--card); border-radius: 22px; box-shadow: var(--sombra); }
+  .vacio-grande .ico { width: 64px; height: 64px; border-radius: 18px; margin-bottom: 14px; }
+  .vacio-grande .ico svg { width: 34px; height: 34px; }
+  .vacio-grande b { display: block; font-size: 22px; letter-spacing: -0.01em; margin-bottom: 6px; }
+
+  /* Tarjeta del MAF: indicadores grandes */
+  #lateral legend { font-size: 17px; }
+  #estadoMaf { margin-top: 10px; color: var(--fg); font-size: 14px; }
+  .maf-ok { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ok); }
+  .maf-ok::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--verde); box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.2); }
+  .maf-arch { font-size: 15px; font-weight: 600; margin-top: 4px; overflow-wrap: anywhere; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; margin: 10px 0 6px; }
+  .stat { background: var(--anidado); border-radius: 14px; padding: 10px 12px; min-width: 0; }
+  .stat b { display: block; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+  .stat span { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .stat.warn b { color: var(--warn); } .stat.err b { color: var(--err); } .stat.ok b { color: var(--ok); }
+  .stat.clic { cursor: pointer; transition: transform 0.15s ease-out, box-shadow 0.25s var(--curva); }
+  .stat.clic:hover { box-shadow: inset 0 0 0 1px var(--sep); }
+  .stat.clic:active { transform: scale(0.97); }
+  .stat.on { box-shadow: inset 0 0 0 2px var(--azul); }
+  fieldset .stats { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+  .encab { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+  .encab b { font-size: 18px; letter-spacing: -0.01em; }
+
+  /* Barras de conteo (equipos por tipo) */
+  .barras { display: grid; gap: 6px; margin: 8px 0; }
+  .barra-f { display: grid; grid-template-columns: minmax(0, 2fr) minmax(60px, 3fr) auto; align-items: center; gap: 10px; font-size: 14px; }
+  .barra-n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .barra-b { height: 8px; border-radius: 999px; background: var(--relleno); overflow: hidden; }
+  .barra-b i { display: block; height: 100%; border-radius: 999px; background: var(--azul); transition: width 0.5s var(--curva); }
+  .barra-f b { min-width: 32px; text-align: right; }
+  #respaldo .botones button { flex: 1 1 auto; }
+
+  /* Vista previa como ficha (lo que se escribirá en el formato) */
+  .ficha { background: var(--anidado); border-radius: 16px; padding: 12px 14px; margin: 8px 0; }
+  .ficha-t { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 8px; }
+  .kv { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px 16px; margin: 0; }
+  .kv > div { min-width: 0; }
+  .kv dt { font-size: 12px; color: var(--muted); }
+  .kv dd { margin: 2px 0 0; font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+  .kv dd:empty::after { content: '—'; color: var(--muted); font-weight: 400; }
+
+  /* ===== Pasos y mensajes ===== */
+  .siguiente { margin: 4px 0 10px; font-size: 16px; background: var(--anidado); border-radius: 14px; padding: 10px 14px; }
+  .siguiente:empty { display: none; }
+  .paso { display: flex; align-items: flex-start; gap: 10px; font-size: 16px; font-weight: 600; margin: 2px 0 12px; padding: 10px 14px; border-radius: 14px;
+    background: var(--sel); color: var(--fg); }
+  .paso::before { content: '→'; color: var(--azul); font-weight: 700; }
+  .paso:empty { display: none; }
+  #avisoCarga, #avisoAlmacen { background: var(--card); border-radius: 14px; padding: 12px 14px; margin: 16px 0; }
+
+  /* Aviso grande de cada lectura (visible de lejos) */
+  #lectura { position: sticky; bottom: 12px; z-index: 6; display: flex; align-items: center; gap: 12px; margin: 16px 0 0; padding: 14px 18px;
+    border-radius: 18px; font-size: 19px; font-weight: 600; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18); animation: aparecer 0.35s var(--curva); }
+  #lectura:not([class*="lectura-"]) { display: none; }
+  #lecturaTexto { flex: 1; }
+  #lectura button { min-height: 36px; border-radius: 999px; font-size: 15px; background: rgba(255, 255, 255, 0.25); color: inherit; }
+  #lectura.lectura-ok { background: #248A3D; color: #fff; }
+  #lectura.lectura-aviso { background: var(--naranja); color: #000; }
+  #lectura.lectura-aviso button { background: rgba(0, 0, 0, 0.12); }
+  #lectura.lectura-error { background: var(--rojo); color: #fff; }
+  #lectura.lectura-rebote { background: var(--card); color: var(--fg); }
+
+  /* ===== Módulos: una sola página que se desliza ===== */
+  #modulos { position: relative; animation: aparecer 0.4s var(--curva); }
+  #modulos.deslizando { overflow: clip; }
+  .saliendo { position: absolute; top: 0; left: 0; width: 100%; }
+
+  /* Entrada de la página con escalonamiento sutil */
+  @keyframes aparecer { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  #marca, #mafBox, #probarEscaner, #tituloModulo, #ayudaModulo { animation: aparecer 0.4s var(--curva) both; }
+  #mafBox { animation-delay: 30ms; } #probarEscaner { animation-delay: 60ms; } #tituloModulo { animation-delay: 60ms; } #ayudaModulo { animation-delay: 90ms; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+  /* Pantallas anchas: barra lateral de vidrio a la izquierda (como en iPad / Mac) y contenido a la derecha */
+  /* Ancho mediano sin barra lateral: las pestañas se acomodan en renglones para que se vean todas */
+  @media (min-width: 600px) and (max-width: 899px) {
+    #nav { flex-wrap: wrap; overflow: visible; }
+  }
+  @media (min-width: 900px) {
+    #app { display: grid; grid-template-columns: 300px minmax(0, 1fr); padding: 0; min-height: 100vh; }
+    #lateral { display: block; position: sticky; top: 0; height: 100vh; overflow-y: auto; box-sizing: border-box; padding: 6px 14px 20px;
+      background: var(--vidrio); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); border-right: 1px solid var(--sep); }
+    #lateral fieldset, #lateral details { margin-bottom: 12px; }
+    /* Indicadores del MAF en un solo renglón dentro de la barra lateral */
+    #lateral .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+    #lateral .stat { padding: 8px 8px; }
+    #lateral .stat b { font-size: 16px; }
+    #lateral .stat span { font-size: 11px; line-height: 1.2; }
+    #principal { padding: 0 24px 24px; max-width: 1600px; }
+    #barra { top: 0; margin: 0 -24px 6px; padding: 18px 24px 12px; }
+    #tituloModulo { font-size: 34px; }
+    #nav { position: relative; top: auto; flex-direction: column; gap: 2px; margin: 0 0 12px; padding: 6px; overflow: visible; border: 0;
+      background: var(--card); border-radius: 16px; box-shadow: var(--sombra); -webkit-backdrop-filter: none; backdrop-filter: none; }
+    #nav a { background: transparent; padding: 8px 10px; gap: 12px; border-radius: 12px; font-size: 15px; white-space: normal; line-height: 1.2; }
+    #nav a .ico { display: inline-grid; }
+    #nav a:not(.activa):hover { background: var(--relleno); }
+    #nav a.activa .ico { background: rgba(255, 255, 255, 0.22); }
+    #nav a .badge { margin-left: auto; }
+    #nav a.activa .badge { background: #fff; color: var(--azul); }
+    .nav-ind { border-radius: 12px; }
+  }
+  /* Con barra lateral, las dos columnas (captura | lista) caben a partir de 1400 px */
+  @media (min-width: 1400px) {
+    .dos-col { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 16px; align-items: start; }
+    .col-der { position: sticky; top: calc(var(--arriba, 80px) + 6px); max-height: calc(100vh - var(--arriba, 80px) - 96px); display: flex; flex-direction: column; margin: 0; }
+    .col-der .scroll { flex: 1 1 auto; min-height: 60px; max-height: none; }
+  }
+  @media print {
+    html, body { background: #fff; color: #000; }
+    fieldset, details, .scroll, table { box-shadow: none !important; background: #fff !important; }
+    .scroll { max-height: none; overflow: visible; } .scroll th { position: static; } .dos-col { display: block; }
+    #lateral, #franja, #ayudaModulo, .paso, .botones, button, details:not([open]) { display: none !important; } body { margin: 0; padding: 0; }
+    #app { display: block; padding: 0; } #barra { position: static; background: none; backdrop-filter: none; margin: 0 0 12px; padding: 0; }
+  }
+  /* ===================== Pulido: profundidad, movimiento, guía y consistencia ===================== */
+  :root { interpolate-size: allow-keywords; --halo1: rgba(0, 122, 255, 0.07); --halo2: rgba(94, 92, 230, 0.06); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --halo1: rgba(10, 132, 255, 0.16); --halo2: rgba(94, 92, 230, 0.14); } }
+  :root[data-theme="dark"] { --halo1: rgba(10, 132, 255, 0.16); --halo2: rgba(94, 92, 230, 0.14); }
+  body { background: radial-gradient(1100px 520px at 0% -8%, var(--halo1), transparent 62%), radial-gradient(900px 480px at 100% -6%, var(--halo2), transparent 60%), var(--bg);
+    background-attachment: fixed; }
+  * { scrollbar-width: thin; scrollbar-color: rgba(120, 120, 128, 0.45) transparent; }
+
+  /* Números de sección: el mismo círculo en todas las tarjetas y en la guía de pasos */
+  legend .num { width: 26px; height: 26px; margin: -3px 10px 0 0; vertical-align: middle; border-radius: 50%; display: inline-grid; place-items: center; font-size: 14px; font-weight: 700;
+    color: #fff; background: var(--azul); box-shadow: 0 3px 8px rgba(0, 122, 255, 0.3); }
+  .pasos-guia { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 0; padding: 0; counter-reset: paso; }
+  .pasos-guia li { counter-increment: paso; display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px 5px 5px; border-radius: 999px;
+    background: var(--card); box-shadow: var(--sombra); font-size: 13px; font-weight: 500; color: var(--fg); }
+  .pasos-guia li::before { content: counter(paso); width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center;
+    background: var(--sel); color: var(--azul); font-weight: 700; font-size: 12px; }
+  .pasos-guia li:not(:last-child)::after { content: '›'; color: var(--muted); margin-left: 2px; font-size: 16px; line-height: 1; }
+
+  /* Campos: al escribir el campo se ilumina */
+  input, select, textarea { transition: box-shadow 0.2s var(--curva), background-color 0.2s var(--curva); }
+  input:not([type]):focus-visible, input[type="text"]:focus-visible, input[type="search"]:focus-visible, input[type="date"]:focus-visible,
+  select:focus-visible, textarea:focus-visible { background: var(--card); }
+
+  /* Botón principal con volumen sutil (mismo estilo en ✓, Dar de alta, Descargar y terminar y Cargar MAF) */
+  .palomita, .botones button[data-b="guardar"], input[type="file"]::file-selector-button {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--azul) 82%, #fff), var(--azul));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 4px 14px color-mix(in srgb, var(--azul) 30%, transparent); }
+  .palomita:hover, .botones button[data-b="guardar"]:hover { filter: brightness(1.06); }
+
+  /* Interruptor: la perilla se estira al presionar, como en iPhone */
+  label > input[type="checkbox"]::before { transition: transform 0.3s var(--curva), width 0.2s var(--curva); }
+  label > input[type="checkbox"]:active::before { width: 33px; }
+  label > input[type="checkbox"]:checked:active::before { transform: translateX(14px); }
+
+  /* Indicadores: aparecen escalonados la primera vez; los clicables se levantan */
+  .stat { transition: transform 0.2s var(--curva), box-shadow 0.25s var(--curva); }
+  .stat.clic:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08); }
+  .stat.nuevo { animation: aparecer 0.5s var(--curva) both; }
+  .stats .stat.nuevo:nth-child(2) { animation-delay: 35ms; } .stats .stat.nuevo:nth-child(3) { animation-delay: 70ms; }
+  .stats .stat.nuevo:nth-child(4) { animation-delay: 105ms; } .stats .stat.nuevo:nth-child(5) { animation-delay: 140ms; } .stats .stat.nuevo:nth-child(6) { animation-delay: 175ms; }
+  .barra-b i { transform-origin: left center; animation: crecer 0.7s var(--curva) both; }
+  @keyframes crecer { from { transform: scaleX(0); } }
+
+  /* Tablas: renglón bajo el mouse */
+  table tr:hover > td { background: color-mix(in srgb, var(--azul) 5%, transparent); }
+  tr.actual > td, tr.actual:hover > td { background: var(--sel); }
+
+  /* Secciones plegables que se abren con suavidad */
+  details::details-content { block-size: 0; overflow: clip; transition: block-size 0.35s var(--curva), content-visibility 0.35s allow-discrete; }
+  details[open]::details-content { block-size: auto; }
+
+  /* Navegación */
+  .nav-ind { transition: transform 0.5s cubic-bezier(0.34, 1.22, 0.64, 1), width 0.45s var(--curva), height 0.45s var(--curva); }
+  #nav a .ico { transition: transform 0.25s var(--curva); }
+  #nav a:hover .ico { transform: scale(1.08); }
+  #nav .corto { display: none; }
+
+  /* Título grande que se compacta al bajar (como en iOS) */
+  #tituloModulo, #tituloModulo .ico { transition: font-size 0.3s var(--curva), width 0.3s var(--curva), height 0.3s var(--curva); }
+  #barra.compacto #tituloModulo { font-size: 20px !important; }
+  #barra.compacto #tituloModulo .ico { width: 30px; height: 30px; border-radius: 8px; }
+  #barra.compacto { box-shadow: 0 1px 0 var(--sep); }
+
+  /* Aviso de lectura: tarjeta flotante que entra con rebote; el error además se sacude */
+  #lectura { max-width: 820px; margin-left: auto; margin-right: auto; bottom: 16px; -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); }
+  #lectura.lectura-ok { background: rgba(36, 138, 61, 0.95); }
+  #lectura.pop { animation: toast 0.5s cubic-bezier(0.34, 1.4, 0.64, 1); }
+  #lectura.lectura-error.pop { animation: toast 0.5s cubic-bezier(0.34, 1.4, 0.64, 1), sacudir 0.45s 0.15s; }
+  @keyframes toast { from { opacity: 0; transform: translateY(24px) scale(0.96); } to { opacity: 1; transform: none; } }
+  @keyframes sacudir { 0%, 100% { translate: 0; } 20% { translate: -8px; } 40% { translate: 7px; } 60% { translate: -5px; } 80% { translate: 3px; } }
+
+  /* Mientras se lee el MAF, barra de progreso animada */
+  #mafBox:has(#archivoMaf:disabled) #estadoMaf::after { content: ''; display: block; height: 5px; margin-top: 12px; border-radius: 999px;
+    background: linear-gradient(90deg, var(--relleno) 0%, var(--azul) 50%, var(--relleno) 100%); background-size: 200% 100%; animation: brillo 1.1s linear infinite; }
+  @keyframes brillo { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+  .vacio-grande .ico { animation: flotar 3s ease-in-out infinite; }
+  @keyframes flotar { 50% { transform: translateY(-6px); } }
+
+  /* Teléfono: barra de pestañas abajo (como en iPhone) y formularios a lo ancho */
+  @media (max-width: 599px) {
+    #app { padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
+    #nav { position: fixed; top: auto; bottom: 0; left: 0; right: 0; margin: 0; z-index: 20; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0;
+      padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); overflow: visible; border-bottom: 0; border-top: 1px solid var(--sep); }
+    #nav a { flex-direction: column; justify-content: center; gap: 2px; padding: 4px 0; background: transparent; border-radius: 12px; font-size: 10.5px; color: var(--muted); }
+    #nav a .ico { display: inline-grid; width: 30px; height: 26px; background: transparent; color: var(--muted); }
+    #nav a .ico svg { width: 24px; height: 24px; }
+    #nav a.activa { color: var(--azul); background: transparent; }
+    #nav a.activa .ico { color: var(--c); }
+    #nav .largo { display: none; } #nav .corto { display: block; }
+    .nav-ind { display: none; }
+    #nav .badge { position: absolute; top: 0; left: calc(50% + 4px); height: 18px; min-width: 18px; font-size: 11px; }
+    #barra { top: 0; }
+    #lectura { bottom: calc(82px + env(safe-area-inset-bottom)); font-size: 16px; }
+    #tituloModulo { font-size: 24px; }
+    label { display: flex; width: 100%; margin-right: 0; }
+    label > input:not([type="checkbox"]), label > select { flex: 1 1 auto; min-width: 0; width: auto; }
+    .botones button { flex: 1 1 auto; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+<aside id="lateral">
+<div id="marca"><span class="logo">AF</span><div><b>Activo Fijo</b><span>Movimientos, plaqueo y bajas</span></div></div>
+<fieldset id="mafBox">
+  <legend>MAF (base de activos)</legend>
+  <input type="file" id="archivoMaf" accept=".xlsx,.xls,.xlsb,.csv">
+  <button id="otroMaf" class="oculto">Cargar otro MAF</button>
+  <div id="estadoMaf"></div>
+</fieldset>
+<nav id="nav" aria-label="Módulos"></nav>
+<details id="probarEscaner">
+  <summary>Probar escáner</summary>
+  <div class="muted">Con este recuadro abierto, escanee cualquier placa: se muestra exactamente lo que manda el escáner y no se captura nada. Ciérrelo para trabajar.</div>
+  <label><input type="checkbox" id="prefSonido"> Sonido al leer</label>
+  <div id="pruebaLectura"></div>
+  <div class="muted">Escáner Zebra USB: debe estar en modo teclado (USB HID Keyboard), con sufijo <b>Enter</b> y sin prefijo. Si salen caracteres de más (como "Ñ"), ajuste el idioma de teclado del escáner al de Windows. Se configura escaneando los códigos de la guía rápida de su modelo o con el programa 123Scan de Zebra.</div>
+</details>
+<details id="respaldo">
+  <summary>Respaldo de la captura</summary>
+  <div class="muted">Guarda en un archivo lo capturado, lo ya generado (para no repetir placas) y el seguimiento. Sirve para pasarlo a otra computadora o si se borran los datos del navegador. El MAF no va incluido: se vuelve a cargar.</div>
+  <div class="botones"><button id="respaldoBajar">Descargar respaldo</button><button id="respaldoSubir">Restaurar respaldo</button></div>
+  <input type="file" id="respaldoArchivo" accept=".json,application/json" class="oculto">
+  <div id="respaldoEstado" class="muted"></div>
+</details>
+</aside>
+<main id="principal">
+<p id="avisoCarga" class="err"><b>La página no terminó de cargar.</b> Ábrela directamente en Google Chrome o Microsoft Edge (clic derecho en el archivo → Abrir con → Chrome/Edge). Las vistas previas y otros navegadores no la ejecutan.</p>
+<p id="avisoAlmacen" class="warn oculto"></p>
+<div id="barra"><div id="tituloModulo"></div><div id="franja"></div></div>
+<div id="ayudaModulo" class="muted"></div>
+<datalist id="listaCr"></datalist>
+<datalist id="listaTiendas"></datalist>
+
+<div id="sinMaf" class="vacio-grande oculto"><span class="ico m-movimientos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg></span><b>Cargue el MAF para empezar</b><div class="muted">Use el botón de la tarjeta "MAF (base de activos)". Se queda guardado en este navegador para la próxima vez.</div></div>
+
+<div id="modulos" class="oculto">
+<div id="mod-movimientos" class="oculto"></div>
+<div id="mod-plaqueo" class="oculto"></div>
+<div id="mod-anexo3" class="oculto"></div>
+<div id="mod-levantamiento" class="oculto"></div>
+<div id="mod-consultas" class="oculto"></div>
+</div>
+
+<div id="lectura"><span id="lecturaTexto"></span><button id="lecturaDeshacer" class="oculto">Deshacer</button></div>
+</main>
+</div>
+<script src="lib/xlsx.full.min.js"></script>
+<script src="lib/jszip.min.js"></script>
+<script src="js/plantilla.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/writer.js"></script>
+<script src="js/comun.js"></script>
+<script src="js/mod-captura.js"></script>
+<script src="js/mod-plaqueo.js"></script>
+<script src="js/mod-levantamiento.js"></script>
+<script src="js/mod-consultas.js"></script>
+<script src="js/inicio.js"></script>
+</body>
+</html>
