@@ -408,7 +408,16 @@
   /* Leyendo el MAF: la zona late suave y no acepta otro archivo */
   .zona:has(input:disabled) { pointer-events: none; }
   .zona:has(input:disabled) .zona-ico { animation: latir 1.2s ease-in-out infinite; }
-  #lateral legend { font-size: 15px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+  /* Tarjeta del MAF mínima: sin título, la zona arriba y una línea de estado */
+  #mafBox > legend { display: none; }
+  #mafBox { padding: 12px; }
+  #estadoMaf { margin-top: 8px; }
+  #estadoMaf:empty { display: none; }
+  .maf-linea { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; font-size: 13px; }
+  .maf-dato { color: var(--muted); }
+  .maf-dato b { color: var(--fg); font-weight: 700; }
+  .maf-dato.warn b { color: var(--warn); } .maf-dato.err b { color: var(--err); }
+  .maf-corte { font-size: 12px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   /* Confirmaciones como hoja de iPhone: sube desde abajo con el fondo difuminado; en pantalla ancha, tarjeta centrada */
   .hoja-fondo { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center; padding: 0;

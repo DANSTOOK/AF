@@ -144,14 +144,13 @@
     $('zonaMaf').classList.toggle('compacta', !!m);
     $('zonaMaf').querySelector('.zona-t1').textContent = m ? 'Arrastre aquí otro MAF' : 'Arrastre aquí el MAF';
     $('sinMaf').classList.toggle('oculto', !!m);
-    if (!m) { $('estadoMaf').innerHTML = '<b>Para empezar, seleccione el archivo MAF (Excel).</b>'; return; }
-    function dato(n, txt, cls, titulo) {
-      return '<div class="stat' + (cls ? ' ' + cls : '') + '"' + (titulo ? ' title="' + esc(titulo) + '"' : '') + '><b data-n="' + n + '">' + n.toLocaleString() + '</b><span>' + txt + '</span></div>';
-    }
-    $('estadoMaf').innerHTML = '<span class="maf-ok">MAF listo</span>' +
-      '<div class="maf-arch">' + esc(m.archivo || '') + '</div><div class="muted maf-corte">Corte ' + esc(m.fecha || 's/f') + '</div>' +
-      '<div class="stats">' + dato(m.total, 'activos') + dato(m.sinPlaca, 'pendientes de placa', 'warn') +
-      (m.placasDuplicadas.length ? dato(m.placasDuplicadas.length, 'placas duplicadas', 'err', m.placasDuplicadas.join(', ')) : '') + '</div>';
+    if (!m) { $('estadoMaf').innerHTML = ''; return; }
+    // Tarjeta mínima: solo la zona para arrastrar y una línea con lo esencial del MAF
+    $('estadoMaf').innerHTML = '<div class="maf-linea"><span class="maf-ok" title="' + esc(m.archivo || '') + '">MAF listo</span>' +
+      '<span class="maf-dato"><b>' + m.total.toLocaleString() + '</b> activos</span>' +
+      '<span class="maf-dato warn"><b>' + m.sinPlaca.toLocaleString() + '</b> sin placa</span>' +
+      (m.placasDuplicadas.length ? '<span class="maf-dato err" title="Placas duplicadas en el MAF: ' + esc(m.placasDuplicadas.join(', ')) + '"><b>' + m.placasDuplicadas.length + '</b> duplicadas</span>' : '') +
+      '</div><div class="muted maf-corte" title="' + esc(m.archivo || '') + '">' + esc(m.archivo || '') + ' · corte ' + esc(m.fecha || 's/f') + '</div>';
   }
 
   // Dato chico del MAF (cuánto tardó, si se recuperó) junto a la fecha de corte, no suelto debajo de los indicadores

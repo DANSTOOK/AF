@@ -408,7 +408,16 @@
   /* Leyendo el MAF: la zona late suave y no acepta otro archivo */
   .zona:has(input:disabled) { pointer-events: none; }
   .zona:has(input:disabled) .zona-ico { animation: latir 1.2s ease-in-out infinite; }
-  #lateral legend { font-size: 15px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+  /* Tarjeta del MAF mínima: sin título, la zona arriba y una línea de estado */
+  #mafBox > legend { display: none; }
+  #mafBox { padding: 12px; }
+  #estadoMaf { margin-top: 8px; }
+  #estadoMaf:empty { display: none; }
+  .maf-linea { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; font-size: 13px; }
+  .maf-dato { color: var(--muted); }
+  .maf-dato b { color: var(--fg); font-weight: 700; }
+  .maf-dato.warn b { color: var(--warn); } .maf-dato.err b { color: var(--err); }
+  .maf-corte { font-size: 12px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   /* Confirmaciones como hoja de iPhone: sube desde abajo con el fondo difuminado; en pantalla ancha, tarjeta centrada */
   .hoja-fondo { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center; padding: 0;
@@ -1897,14 +1906,13 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
     $('zonaMaf').classList.toggle('compacta', !!m);
     $('zonaMaf').querySelector('.zona-t1').textContent = m ? 'Arrastre aquí otro MAF' : 'Arrastre aquí el MAF';
     $('sinMaf').classList.toggle('oculto', !!m);
-    if (!m) { $('estadoMaf').innerHTML = '<b>Para empezar, seleccione el archivo MAF (Excel).</b>'; return; }
-    function dato(n, txt, cls, titulo) {
-      return '<div class="stat' + (cls ? ' ' + cls : '') + '"' + (titulo ? ' title="' + esc(titulo) + '"' : '') + '><b data-n="' + n + '">' + n.toLocaleString() + '</b><span>' + txt + '</span></div>';
-    }
-    $('estadoMaf').innerHTML = '<span class="maf-ok">MAF listo</span>' +
-      '<div class="maf-arch">' + esc(m.archivo || '') + '</div><div class="muted maf-corte">Corte ' + esc(m.fecha || 's/f') + '</div>' +
-      '<div class="stats">' + dato(m.total, 'activos') + dato(m.sinPlaca, 'pendientes de placa', 'warn') +
-      (m.placasDuplicadas.length ? dato(m.placasDuplicadas.length, 'placas duplicadas', 'err', m.placasDuplicadas.join(', ')) : '') + '</div>';
+    if (!m) { $('estadoMaf').innerHTML = ''; return; }
+    // Tarjeta mínima: solo la zona para arrastrar y una línea con lo esencial del MAF
+    $('estadoMaf').innerHTML = '<div class="maf-linea"><span class="maf-ok" title="' + esc(m.archivo || '') + '">MAF listo</span>' +
+      '<span class="maf-dato"><b>' + m.total.toLocaleString() + '</b> activos</span>' +
+      '<span class="maf-dato warn"><b>' + m.sinPlaca.toLocaleString() + '</b> sin placa</span>' +
+      (m.placasDuplicadas.length ? '<span class="maf-dato err" title="Placas duplicadas en el MAF: ' + esc(m.placasDuplicadas.join(', ')) + '"><b>' + m.placasDuplicadas.length + '</b> duplicadas</span>' : '') +
+      '</div><div class="muted maf-corte" title="' + esc(m.archivo || '') + '">' + esc(m.archivo || '') + ' · corte ' + esc(m.fecha || 's/f') + '</div>';
   }
 
   // Dato chico del MAF (cuánto tardó, si se recuperó) junto a la fecha de corte, no suelto debajo de los indicadores
