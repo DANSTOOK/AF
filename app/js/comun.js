@@ -750,38 +750,27 @@
     registro = registros[App.moduloActual] || null;
   }
 
-  var DESLIZA_MS = 340;
+  // Cambio de módulo: el que sale se oculta al instante y el nuevo entra con un desvanecido corto y un leve desplazamiento.
+  // Mover dos pantallas completas a la vez (con tablas grandes y barras translúcidas encima) se veía lento y a saltos.
+  var DESLIZA_MS = 200;
   var CURVA_APPLE = 'cubic-bezier(0.32, 0.72, 0, 1)';
   var terminarDeslizado = null;
   function deslizar(sal, ent, dir) {
-    var cont = $('modulos');
     if (terminarDeslizado) terminarDeslizado();
-    cont.style.minHeight = cont.offsetHeight + 'px'; // la página no brinca mientras se desliza
-    cont.classList.add('deslizando');
-    sal.classList.add('saliendo');
+    sal.classList.add('oculto');
     ent.classList.remove('oculto');
-    var anims = [];
-    if (sal.animate && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      var opc = { duration: DESLIZA_MS, easing: CURVA_APPLE };
-      // Como en iPhone: el que avanza entra completo por encima; el de atrás se corre un poco y se oscurece
-      var atras = { transform: 'translateX(' + (-dir * 30) + '%)', opacity: 0.4 }, fuera = { transform: 'translateX(' + (dir * 100) + '%)', opacity: 1 }, quieto = { transform: 'translateX(0)', opacity: 1 };
-      sal.style.zIndex = dir > 0 ? 0 : 2; ent.style.zIndex = dir > 0 ? 2 : 0; ent.style.position = 'relative';
-      anims = dir > 0
-        ? [sal.animate([quieto, atras], opc), ent.animate([fuera, quieto], opc)]
-        : [sal.animate([quieto, { transform: 'translateX(100%)', opacity: 1 }], opc), ent.animate([atras, quieto], opc)];
+    var anim = null;
+    if (ent.animate && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      anim = ent.animate([{ opacity: 0, transform: 'translateX(' + (dir * 16) + 'px)' }, { opacity: 1, transform: 'none' }],
+        { duration: DESLIZA_MS, easing: CURVA_APPLE });
     }
     function fin() {
       if (terminarDeslizado !== fin) return;
       terminarDeslizado = null;
-      anims.forEach(function (a) { a.cancel(); });
-      sal.classList.remove('saliendo');
-      sal.classList.add('oculto');
-      sal.style.zIndex = ''; ent.style.zIndex = ''; ent.style.position = '';
-      cont.classList.remove('deslizando');
-      cont.style.minHeight = '';
+      if (anim) anim.cancel();
     }
     terminarDeslizado = fin;
-    if (anims.length) { anims[1].onfinish = fin; setTimeout(fin, DESLIZA_MS + 150); } // el reloj cubre el caso de ventana en segundo plano
+    if (anim) { anim.onfinish = fin; setTimeout(fin, DESLIZA_MS + 100); } // el reloj cubre el caso de ventana en segundo plano
     else fin();
   }
 
@@ -828,7 +817,7 @@
       var clave = (cont ? cont.getAttribute('data-c') || cont.id : '') + '|' + (st.querySelector('span') || {}).textContent;
       var fin = Number(b.getAttribute('data-n')), ini = cifras[clave];
       cifras[clave] = fin;
-      if (ini === undefined) { st.classList.add('nuevo'); ini = 0; }
+      if (ini === undefined) return; // la primera vez se muestra tal cual (al cambiar de módulo no debe haber números corriendo)
       if (ini === fin || sinMovimiento.matches) return;
       var t0 = performance.now(), dur = 650, listo = false;
       (function paso(t) {
@@ -918,6 +907,16 @@
     var ps = $('prefSonido');
     ps.checked = App.pref('sonido', true);
     ps.addEventListener('change', function () { App.guardarPref('sonido', ps.checked); if (ps.checked) App.sonido('ok'); });
+    // Modo oscuro opcional (por defecto claro); se recuerda en este navegador
+    var po = $('prefOscuro');
+    po.checked = !!App.pref('oscuro', false);
+    po.addEventListener('change', function () {
+      var raiz = document.documentElement;
+      raiz.classList.add('cambiando-tema');
+      raiz.setAttribute('data-theme', po.checked ? 'dark' : 'light');
+      App.guardarPref('oscuro', po.checked);
+      setTimeout(function () { raiz.classList.remove('cambiando-tema'); }, 400);
+    });
     usarEscanerDelModulo();
     revisarAlmacen();
     pintarNav();

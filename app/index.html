@@ -1,7 +1,11 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-theme="light">
 <head>
 <meta charset="utf-8">
+<script>
+  // Tema: claro por defecto; oscuro solo si el usuario lo eligió (se aplica antes de pintar para que no parpadee)
+  try { if (JSON.parse(localStorage.getItem('af_pref_oscuro') || 'false')) document.documentElement.setAttribute('data-theme', 'dark'); } catch (e) { /* sin almacenamiento: claro */ }
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Movimientos Activo Fijo</title>
 <style>
@@ -341,7 +345,7 @@
   details[open]::details-content { block-size: auto; }
 
   /* Navegación */
-  .nav-ind { transition: transform 0.5s cubic-bezier(0.34, 1.22, 0.64, 1), width 0.45s var(--curva), height 0.45s var(--curva); }
+  .nav-ind { transition: transform 0.26s var(--curva), width 0.26s var(--curva), height 0.26s var(--curva); will-change: transform; }
   #nav a .ico { transition: transform 0.25s var(--curva); }
   #nav a:hover .ico { transform: scale(1.08); }
   #nav .corto { display: none; }
@@ -419,6 +423,13 @@
   .maf-dato.warn b { color: var(--warn); } .maf-dato.err b { color: var(--err); }
   .maf-corte { font-size: 12px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+  /* Interruptor de modo oscuro (opcional; por defecto claro) */
+  .tema-fila { display: flex; justify-content: space-between; align-items: center; margin: 0 0 16px; padding: 10px 18px; min-height: 50px; box-sizing: border-box;
+    background: var(--card); border-radius: 22px; box-shadow: var(--sombra); font-size: 16px; font-weight: 600; cursor: pointer; }
+  .tema-fila > input[type="checkbox"] { order: 2; }
+  /* Cambio de color suave al alternar el tema */
+  html.cambiando-tema, html.cambiando-tema * { transition: background-color 0.35s var(--curva), color 0.35s var(--curva), border-color 0.35s var(--curva) !important; }
+
   /* Confirmaciones como hoja de iPhone: sube desde abajo con el fondo difuminado; en pantalla ancha, tarjeta centrada */
   .hoja-fondo { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center; padding: 0;
     background: rgba(0, 0, 0, 0); -webkit-backdrop-filter: blur(0); backdrop-filter: blur(0); transition: background-color 0.3s var(--curva), backdrop-filter 0.3s var(--curva); }
@@ -492,6 +503,7 @@
   <input type="file" id="respaldoArchivo" accept=".json,application/json" class="oculto">
   <div id="respaldoEstado" class="muted"></div>
 </details>
+<label id="temaFila" class="tema-fila"><span>Modo oscuro</span><input type="checkbox" id="prefOscuro"></label>
 </aside>
 <main id="principal">
 <p id="avisoCarga" class="err"><b>La página no terminó de cargar.</b> Ábrela directamente en Google Chrome o Microsoft Edge (clic derecho en el archivo → Abrir con → Chrome/Edge). Las vistas previas y otros navegadores no la ejecutan.</p>
