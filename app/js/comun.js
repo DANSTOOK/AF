@@ -808,6 +808,7 @@
   var sinMovimiento = matchMedia('(prefers-reduced-motion: reduce)');
   // Números de sección "1. Tienda" -> círculo numerado, igual en todas las tarjetas
   function numerarSecciones(raiz) {
+    if (!raiz || !raiz.querySelectorAll) return; // el nodo ya se quitó al redibujar
     raiz.querySelectorAll('legend').forEach(function (lg) {
       var t = lg.firstChild;
       if (!t || t.nodeType !== 3) return;
@@ -821,6 +822,7 @@
   // Indicadores: la primera vez aparecen escalonados; si su número cambia, cuenta hasta el nuevo valor
   var cifras = {};
   function animarCifras(raiz) {
+    if (!raiz || !raiz.querySelectorAll) return; // el nodo ya se quitó al redibujar
     raiz.querySelectorAll('.stat b[data-n]').forEach(function (b) {
       var st = b.parentNode, cont = st.closest('[data-c]') || st.closest('[id]');
       var clave = (cont ? cont.getAttribute('data-c') || cont.id : '') + '|' + (st.querySelector('span') || {}).textContent;
