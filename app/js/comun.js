@@ -529,16 +529,29 @@
 
   var deshacerLectura = null;
   /** Resultado de una lectura: sonido + aviso grande abajo. deshacer (opcional): qué hace el botón Deshacer del aviso */
+  // Íconos animados del aviso (se dibujan con un trazo): encontrado, no encontrado, revisar, repetida
+  var SVG_LECTURA = '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">';
+  var ICONOS_LECTURA = {
+    ok: SVG_LECTURA + '<circle class="ic-c" cx="16" cy="16" r="14" pathLength="1"/><path class="ic-t" pathLength="1" d="M9.5 16.5l4.5 4.5 8.5-9"/></svg>',
+    error: SVG_LECTURA + '<circle class="ic-c" cx="16" cy="16" r="14" pathLength="1"/><path class="ic-t" pathLength="1" d="M11 11l10 10"/><path class="ic-t ic-t2" pathLength="1" d="M21 11L11 21"/></svg>',
+    aviso: SVG_LECTURA + '<circle class="ic-c" cx="16" cy="16" r="14" pathLength="1"/><path class="ic-t" pathLength="1" d="M16 8.5v9"/><circle class="ic-p" cx="16" cy="22.6" r="1.6"/></svg>',
+    rebote: SVG_LECTURA + '<circle class="ic-c" cx="16" cy="16" r="14" pathLength="1"/><path class="ic-t" pathLength="1" d="M10.5 16a5.5 5.5 0 1 0 1.8-4M10.5 9v3.8h3.8"/></svg>'
+  };
   App.lectura = function (tipo, texto, deshacer) {
     App.sonido(tipo);
     $('lectura').className = 'lectura-' + tipo;
     void $('lectura').offsetWidth; $('lectura').classList.add('pop'); // cada lectura vuelve a entrar con rebote (solo visual)
-    $('lecturaTexto').textContent = texto;
+    $('lecturaIco').innerHTML = ICONOS_LECTURA[tipo] || '';
+    // Destello en el borde de la pantalla (verde / naranja / rojo), visible de lejos
+    var d = $('destello');
+    d.className = ''; void d.offsetWidth;
+    if (tipo !== 'rebote') d.className = 'destello-' + tipo;
+    $('lecturaTexto').textContent = String(texto).replace(/^\s*[✓✗⚠]️?\s*/, ''); // el ícono ya dice si fue bien o mal
     deshacerLectura = deshacer || null;
     $('lecturaDeshacer').classList.toggle('oculto', !deshacerLectura);
   };
   function limpiarLectura() {
-    $('lectura').className = ''; $('lecturaTexto').textContent = '';
+    $('lectura').className = ''; $('lecturaTexto').textContent = ''; $('lecturaIco').innerHTML = ''; $('destello').className = '';
     deshacerLectura = null;
     $('lecturaDeshacer').classList.add('oculto');
   }

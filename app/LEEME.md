@@ -38,6 +38,7 @@ Arriba hay cinco pestañas en la misma página; al hacer clic el módulo entra d
 - Configuración del escáner: modo teclado (USB HID), sufijo **Enter**, sin prefijo, idioma de teclado igual al de Windows. Se configura escaneando los códigos de la guía rápida del modelo o con 123Scan de Zebra.
 - **Probar escáner** (arriba): con el recuadro abierto, cada lectura muestra qué mandó el escáner (caracteres, si terminó en Enter, si parece placa, si existe en el MAF) y no captura nada.
 - La lectura llega al campo Placa aunque el cursor esté en otro lado (se reconoce por la velocidad; lo tecleado a mano no se toca). Excepción: la Serie, si está enfocada y vacía, recibe la lectura.
+- Cada lectura se ve de lejos: el aviso trae un ícono que se dibuja (✓ verde si se encontró, ✕ roja que se sacude si no, ! naranja si hay que revisar) y los bordes de la pantalla destellan del mismo color.
 - Sonido + aviso grande abajo: bip agudo = bien, doble = revisar (otra tienda, no está en el MAF, hay que elegir), grave = error. Se apaga en Probar escáner.
 - Se rechazan lecturas que no parecen placa (las placas del MAF son de 8 a 12 dígitos): serie, código de producto, lectura cortada o caracteres de más como "Ñ". Si sí es placa, escribirla a mano.
 - La misma placa leída dos veces en menos de 2 s se ignora.
