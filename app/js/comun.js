@@ -35,7 +35,7 @@
   // ---------- Almacenamiento local ----------
   App.leerLS = function (k, def) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch (e) { return def; } };
   App.guardarLS = function (k, v) {
-    try { localStorage.setItem(k, JSON.stringify(v)); return true; }
+    try { localStorage.setItem(k, JSON.stringify(v)); programarRespaldo(); return true; }
     catch (e) { avisoAlmacen('No se pudo guardar la captura en este navegador. Si cierra o recarga la página se perderá: genere el Excel antes de salir.'); return false; }
   };
   function avisoAlmacen(msg) { $('avisoAlmacen').textContent = msg; $('avisoAlmacen').classList.remove('oculto'); }
@@ -879,14 +879,113 @@
     return c.capturados + ' movimientos capturados sin terminar, ' + c.generados + ' ya generados (para no repetir), ' +
       c.enviados + ' en seguimiento y ' + c.escaneadas + ' placas de levantamiento';
   }
-  $('respaldoBajar').addEventListener('click', function () {
+  function armarRespaldo() {
     var datos = {};
-    try { clavesAF().forEach(function (k) { datos[k] = localStorage.getItem(k); }); }
+    clavesAF().forEach(function (k) { datos[k] = localStorage.getItem(k); });
+    return { app: 'activo-fijo', version: 1, generado: new Date().toISOString(), datos: datos };
+  }
+  $('respaldoBajar').addEventListener('click', function () {
+    var obj;
+    try { obj = armarRespaldo(); }
     catch (e) { $('respaldoEstado').innerHTML = '<span class="err">Este navegador no deja leer lo guardado.</span>'; return; }
-    var obj = { app: 'activo-fijo', version: 1, generado: new Date().toISOString(), datos: datos };
     App.descargar(JSON.stringify(obj), 'Respaldo Activo Fijo ' + hoyLocal() + '.json', 'application/json');
-    $('respaldoEstado').innerHTML = '<span class="ok">Respaldo descargado:</span> ' + esc(textoContenido(contenido(datos))) + '.';
+    $('respaldoEstado').innerHTML = '<span class="ok">Respaldo descargado:</span> ' + esc(textoContenido(contenido(obj.datos))) + '.';
   });
+
+  // ---------- Respaldo automático: cada cambio se escribe solo en un archivo que el usuario eligió una vez ----------
+  // (Chrome/Edge). El permiso de escritura puede pedirse de nuevo al reabrir: entonces queda "en pausa" hasta un clic.
+  var auto = { handle: null, timer: 0, pendiente: false, escribiendo: false, otraVez: false, estado: 'apagado', ultimo: null, error: '' };
+  var soportaAuto = typeof window.showSaveFilePicker === 'function';
+  function guardarHandle(h) { return idb('readwrite', function (s) { return h ? s.put(h, 'respaldoAuto') : s.delete('respaldoAuto'); }); }
+  function programarRespaldo() {
+    if (!auto || !auto.handle) return;
+    auto.pendiente = true;
+    clearTimeout(auto.timer);
+    auto.timer = setTimeout(function () { escribirRespaldo(false); }, 1500);
+    if (auto.estado === 'pausa') pintarAuto();
+  }
+  function permisoAuto(pedir) {
+    var h = auto.handle, o = { mode: 'readwrite' };
+    return h.queryPermission(o).then(function (p) { return p === 'granted' || !pedir ? p : h.requestPermission(o); });
+  }
+  function escribirRespaldo(pedir) {
+    if (!auto.handle) return Promise.resolve();
+    clearTimeout(auto.timer);
+    if (auto.escribiendo) { auto.otraVez = true; return Promise.resolve(); }
+    auto.escribiendo = true;
+    var h = auto.handle;
+    return permisoAuto(pedir).then(function (p) {
+      if (p !== 'granted') { auto.estado = 'pausa'; return; }
+      var obj = armarRespaldo();
+      auto.pendiente = false;
+      return h.createWritable().then(function (w) {
+        return w.write(JSON.stringify(obj)).then(function () { return w.close(); });
+      }).then(function () { auto.estado = 'ok'; auto.ultimo = new Date(); auto.error = ''; });
+    }).catch(function (e) {
+      auto.pendiente = true; auto.estado = 'error'; auto.error = e && e.message || String(e);
+    }).then(function () {
+      auto.escribiendo = false;
+      pintarAuto();
+      if (auto.otraVez) { auto.otraVez = false; if (auto.pendiente && auto.estado === 'ok') escribirRespaldo(false); }
+    });
+  }
+  function horaCorta(d) { return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+  function pintarAuto() {
+    var nombre = auto.handle ? '<b>' + esc(auto.handle.name) + '</b>' : '';
+    var txt, punto = auto.estado;
+    if (!soportaAuto) { txt = 'Este navegador no permite guardar solo. Ábralo en Chrome o Edge, o use "Descargar respaldo".'; punto = 'apagado'; }
+    else if (!auto.handle) { txt = 'Apagado. Elija una vez dónde guardarlo (por ejemplo, en una carpeta de OneDrive) y cada cambio se guarda solo en ese archivo.'; punto = 'apagado'; }
+    else if (auto.estado === 'ok') txt = 'Activo: se guardó a las ' + horaCorta(auto.ultimo) + ' en ' + nombre + '.';
+    else if (auto.estado === 'pausa') txt = 'En pausa: el navegador pide permiso otra vez para escribir en ' + nombre + '. Presione "Reactivar".';
+    else if (auto.estado === 'error') txt = 'No se pudo guardar en ' + nombre + ': ' + esc(auto.error) + '. Reintente o elija otro archivo.';
+    else txt = 'Activo en ' + nombre + '. Se guarda en cuanto haya un cambio.';
+    $('autoEstado').innerHTML = txt;
+    $('autoRespaldo').setAttribute('data-estado', punto);
+    $('autoActivar').classList.toggle('oculto', !soportaAuto || (!!auto.handle && auto.estado !== 'error'));
+    $('autoActivar').textContent = auto.handle ? 'Elegir otro archivo' : 'Activar respaldo automático';
+    $('autoReactivar').classList.toggle('oculto', !auto.handle || (auto.estado !== 'pausa' && auto.estado !== 'error'));
+    $('autoApagar').classList.toggle('oculto', !auto.handle);
+    // Aviso arriba solo si hay cambios sin respaldar y hace falta un clic
+    var avisar = !!auto.handle && auto.pendiente && (auto.estado === 'pausa' || auto.estado === 'error');
+    $('avisoRespaldo').classList.toggle('oculto', !avisar);
+  }
+  function reactivarAuto() { escribirRespaldo(true); }
+  $('autoActivar').addEventListener('click', function () {
+    window.showSaveFilePicker({ id: 'af-respaldo', startIn: 'documents', suggestedName: 'Respaldo Activo Fijo (automático).json',
+      types: [{ description: 'Respaldo de Activo Fijo', accept: { 'application/json': ['.json'] } }] })
+      .then(function (h) {
+        auto.handle = h; auto.estado = 'nuevo'; auto.pendiente = true;
+        return guardarHandle(h).catch(function () { /* sin IndexedDB: dura solo esta sesión */ });
+      })
+      .then(function () { return escribirRespaldo(true); })
+      .catch(function (e) { if (e && e.name !== 'AbortError') { auto.estado = 'error'; auto.error = e.message; pintarAuto(); } });
+  });
+  $('autoReactivar').addEventListener('click', reactivarAuto);
+  $('avisoRespaldoBtn').addEventListener('click', reactivarAuto);
+  $('autoApagar').addEventListener('click', function () {
+    App.confirmar({ titulo: '¿Apagar el respaldo automático?', texto: 'El archivo ' + (auto.handle ? auto.handle.name : '') + ' se queda como está; solo deja de actualizarse.', aceptar: 'Apagar' })
+      .then(function (ok) {
+        if (!ok) return;
+        clearTimeout(auto.timer);
+        auto.handle = null; auto.estado = 'apagado'; auto.pendiente = false;
+        guardarHandle(null).catch(function () {});
+        pintarAuto();
+      });
+  });
+  // Al salir o cambiar de ventana, lo pendiente se guarda ya (sin esperar)
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden' && auto.handle && auto.pendiente && auto.estado !== 'pausa') escribirRespaldo(false);
+  });
+  function iniciarAuto() {
+    pintarAuto();
+    if (!soportaAuto) return;
+    idb('readonly', function (s) { return s.get('respaldoAuto'); }).then(function (h) {
+      if (!h || auto.handle) return;
+      auto.handle = h;
+      // Al abrir no se escribe nada (no se pisa el respaldo con datos vacíos); solo se revisa el permiso
+      return permisoAuto(false).then(function (p) { auto.estado = p === 'granted' ? 'listo' : 'pausa'; });
+    }).catch(function () {}).then(pintarAuto);
+  }
   $('respaldoSubir').addEventListener('click', function () { $('respaldoArchivo').click(); });
   $('respaldoArchivo').addEventListener('change', function (e) {
     var f = e.target.files[0];
@@ -915,6 +1014,22 @@
     });
   });
 
+  // ---------- Impresión: una hoja aparte (no la pantalla) que solo existe mientras se imprime ----------
+  App.imprimir = function (html, titulo) {
+    var d = $('impresion'), t0 = document.title;
+    d.innerHTML = html;
+    if (titulo) document.title = titulo; // nombre sugerido al "Guardar como PDF"
+    document.body.classList.add('imprimiendo');
+    function fin() {
+      window.removeEventListener('afterprint', fin);
+      document.body.classList.remove('imprimiendo');
+      d.innerHTML = '';
+      document.title = t0;
+    }
+    window.addEventListener('afterprint', fin);
+    setTimeout(function () { window.print(); }, 60);
+  };
+
   App.iniciar = function () {
     $('avisoCarga').classList.add('oculto');
     var ps = $('prefSonido');
@@ -932,6 +1047,7 @@
     });
     usarEscanerDelModulo();
     revisarAlmacen();
+    iniciarAuto();
     pintarNav();
     $('mod-' + App.moduloActual).classList.remove('oculto');
     $('estadoMaf').textContent = 'Buscando el último MAF cargado…';

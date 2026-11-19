@@ -46,7 +46,8 @@
       '<div data-c="msgAlta"></div>' +
       '<h3 data-c="tituloAct">Activos de la tienda</h3><div data-c="statsAct"></div>' +
       '<label>Mostrar <select data-c="verAct"><option value="todos">Todos</option><option value="pend">Solo los que faltan de alta</option></select></label> ' +
-      '<label>Buscar <input data-c="filtroAct" size="24" placeholder="Activo, equipo, serie o placa"></label>' +
+      '<label>Buscar <input data-c="filtroAct" size="24" placeholder="Activo, equipo, serie o placa"></label> ' +
+      '<button data-accion="imprimir" title="Hoja con los activos de la tienda, las altas de esta captura y espacio para firmas">Imprimir hoja para firma</button>' +
       '<div class="scroll"><table data-c="activos"></table></div></fieldset>' +
 
       '<details data-c="detRev"><summary data-c="tituloRev"></summary><fieldset>' +
@@ -541,6 +542,8 @@
           });
       } else if (accion === 'exportar') {
         exportar();
+      } else if (accion === 'imprimir') {
+        imprimir();
       } else if (t.getAttribute('data-tras')) {
         mostrar([transferir(t.getAttribute('data-tras'))].filter(Boolean));
       } else if (t.getAttribute('data-alta')) {
@@ -604,6 +607,68 @@
         Resumen: resumen, Detalle: detalle,
         Escaneadas: lev.placas.map(function (x, i) { return { '#': i + 1, Placa: x.placa, Hora: x.hora }; })
       });
+    }
+
+    // ---------- Hoja impresa para firma del encargado ----------
+    function imprimir() {
+      var cr = crValido();
+      if (!cr) { msgAlta('err', ['Elija la tienda para imprimir su hoja.']); q('cr').focus(); return; }
+      var t = AF.tiendaDeCr(App.maf, cr) || {};
+      var lista = activosTienda(cr).slice().sort(function (a, b) {
+        return String(a.r.descripcion).localeCompare(String(b.r.descripcion), 'es') || String(a.r.noActivo).localeCompare(String(b.r.noActivo));
+      });
+      // Con la revisión de esta tienda: lo escaneado sale palomeado como "visto"
+      var vistos = new Set();
+      if (lev.cr === cr && lev.placas.length) {
+        AF.levantamiento(App.maf, cr, lev.placas.map(function (x) { return x.placa; })).encontrados.forEach(function (e) { vistos.add(e.reg.noActivo); });
+      }
+      var movs = lote.filas.filter(function (f) { return f.cr === cr || f.crDestino === cr; });
+      var n = { altas: 0, conPlaca: 0, faltan: 0, noPlaq: 0 };
+      lista.forEach(function (x) {
+        if (x.e.k === 'casado') n.altas++; else if (x.e.k === 'conPlaca') n.conPlaca++; else if (x.e.k === 'pendiente') n.faltan++; else if (x.e.k === 'noPlaqueable') n.noPlaq++;
+      });
+      function celdas(vals) { return vals.map(function (v) { return '<td>' + esc(v == null ? '' : v) + '</td>'; }).join(''); }
+      var html =
+        '<div class="imp-cab"><div><h1>Levantamiento de activo fijo</h1><p>Alta de placas y verificación del equipo de la tienda</p></div>' +
+        '<div class="imp-fecha">' + esc(fecha()) + '</div></div>' +
+        '<dl class="imp-datos">' +
+          '<div><dt>CR</dt><dd>' + esc(cr) + '</dd></div>' +
+          '<div><dt>Tienda</dt><dd>' + esc(t.tienda || '') + '</dd></div>' +
+          '<div><dt>Plaza</dt><dd>' + esc(t.plaza || '') + '</dd></div>' +
+          '<div><dt>MAF (corte)</dt><dd>' + esc(App.maf.fecha || '—') + '</dd></div>' +
+        '</dl>' +
+        '<div class="imp-res">' +
+          '<div><b>' + lista.length + '</b>activos en el MAF</div>' +
+          '<div><b>' + n.altas + '</b>altas con placa nueva</div>' +
+          '<div><b>' + n.conPlaca + '</b>ya tenían placa</div>' +
+          '<div><b>' + n.faltan + '</b>faltan de alta</div>' +
+          (vistos.size ? '<div><b>' + vistos.size + '</b>vistos al escanear</div>' : '') +
+        '</div>' +
+        '<h2>Movimientos de esta captura <small>(' + movs.length + ')</small></h2>' +
+        (movs.length
+          ? '<table><thead><tr><th>Tipo</th><th>Placa</th><th>No. Activo</th><th>Descripción</th><th>Marca</th><th>Modelo</th><th>Serie</th><th>Detalle</th></tr></thead><tbody>' +
+            movs.map(function (f) {
+              var det = f.tipo === 'BAJA' ? f.motivo : f.tipo === 'TRASPASO' ? 'De ' + f.cr + ' a ' + f.crDestino : '';
+              return '<tr><td>' + esc(NOMBRE_TIPO[f.tipo]) + '</td><td class="imp-placa">' + esc(f.placa) + '</td>' + celdas([f.noActivo, f.descripcion, f.marca, f.modelo, f.serie, det]) + '</tr>';
+            }).join('') + '</tbody></table>'
+          : '<div class="imp-vacio">Sin movimientos capturados para esta tienda.</div>') +
+        '<h2>Activos de la tienda en el MAF <small>(' + lista.length + ') — marque "Visto" al verificar cada equipo</small></h2>' +
+        '<table><thead><tr><th class="imp-n">#</th><th>No. Activo</th><th>Descripción</th><th>Marca</th><th>Modelo</th><th>Serie</th><th>Placa</th><th>Estado</th><th class="imp-visto">Visto</th></tr></thead><tbody>' +
+        lista.map(function (x, i) {
+          var f = x.e.fila, r = x.r;
+          var estado = x.e.k === 'casado' ? 'Alta con placa nueva' : x.e.txt;
+          return '<tr' + (x.e.k === 'casado' ? ' class="imp-nueva"' : '') + '><td class="imp-n">' + (i + 1) + '</td>' +
+            celdas([r.noActivo, r.descripcion, f ? f.marca || r.marca : r.marca, f ? f.modelo || r.modelo : r.modelo, f ? f.serie || r.serie : r.serie]) +
+            '<td class="imp-placa">' + esc(x.e.placa || '') + '</td><td>' + esc(estado) + '</td>' +
+            '<td class="imp-visto">' + (vistos.has(r.noActivo) ? '✓' : '<span class="imp-caja"></span>') + '</td></tr>';
+        }).join('') + '</tbody></table>' +
+        '<div class="imp-firmas">' +
+          '<div>Encargado(a) de tienda<small>Nombre y firma</small></div>' +
+          '<div>Realizó el levantamiento<small>Nombre y firma</small></div>' +
+          '<div>Responsable de Activo Fijo<small>Nombre y firma</small></div>' +
+        '</div>' +
+        '<div class="imp-pie">Generado el ' + esc(App.fechaTexto(App.hoyLocal())) + ' a las ' + hora() + ' con el aplicativo de Activo Fijo. Los renglones sombreados son altas con placa nueva de esta captura.</div>';
+      App.imprimir(html, 'Levantamiento ' + cr + ' ' + (t.tienda || '') + ' ' + val('fecha'));
     }
 
     App.botonesFormato({

@@ -27,6 +27,7 @@ Arriba hay cinco pestañas en la misma página; al hacer clic el módulo entra d
    - Escanear la placa: se revisa y el cursor pasa a Serie. Serie, marca y modelo vienen del MAF; se corrigen o se escanea la serie encima.
    - *✓ Dar de alta* (o Enter en serie, marca o modelo) lo agrega al formato de la derecha y pasa al siguiente activo. *Deshacer* en el aviso de abajo lo quita.
    - El formato sale en la pestaña Alta de código del V.2 (activo, placa, serie, modelo, marca, fecha), listo para que AF lo suba a List.
+   - *Imprimir hoja para firma*: hoja tamaño carta con los datos de la tienda, un resumen, los movimientos capturados de esa tienda, todos sus activos del MAF con una casilla "Visto" (palomeada si se escaneó en la revisión) y tres firmas: encargado(a) de tienda, quien levantó y responsable de AF. En el cuadro de impresión se puede elegir "Guardar como PDF".
    - Opcional, plegado: *Revisar todo lo de la tienda contra el MAF* (escanear todo → transferencias, altas de placas que no están en el MAF y bajas de lo no encontrado). Con ese recuadro abierto el escáner llena esa lista.
 8. **Consultas y seguimiento**:
    - *Consulta de tienda*: todos los activos del CR con su estado, filtro, exportar o imprimir.
@@ -62,6 +63,10 @@ En el V.2 se escribe desde el renglón 2: el ejemplo del formato se sobrescribe 
 ## Respaldo
 - En la barra lateral, **Respaldo de la captura**: *Descargar respaldo* guarda en un archivo .json todo lo capturado sin terminar, lo ya generado (para no repetir placas), el seguimiento, el levantamiento y las preferencias. *Restaurar respaldo* lo carga en otra computadora o navegador; antes muestra qué trae y qué reemplaza, y pide confirmación.
 - El MAF no va en el respaldo: se vuelve a cargar.
+- **Respaldo automático** (Chrome o Edge): *Activar respaldo automático* pide una sola vez dónde guardar el archivo (por ejemplo, una carpeta de OneDrive). Desde ahí, cada cambio se escribe solo en ese archivo unos segundos después. El punto verde indica que está activo y la hora del último guardado.
+  - Al abrir la página no se escribe nada hasta que haya un cambio, para no pisar el respaldo con datos vacíos.
+  - Si el navegador vuelve a pedir permiso (pasa al reabrirlo), el punto se pone naranja y, si hay cambios sin respaldar, arriba sale un aviso con *Reactivar*: un clic y sigue. Chrome puede ofrecer "Permitir en cada visita" para no volver a preguntar.
+  - Ese archivo se restaura igual que uno descargado, con *Restaurar respaldo*. *Apagar* deja el archivo como está y solo deja de actualizarlo.
 
 ## Diseño
 - Las confirmaciones (borrar captura, agregar bajas en bloque, nuevo levantamiento, quitar aplicados, restaurar respaldo) son hojas estilo iPhone: Cancelar o el botón de la acción (rojo si borra algo). Esc cancela y Enter acepta; una lectura del escáner nunca acepta una hoja.

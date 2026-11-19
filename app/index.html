@@ -503,6 +503,63 @@
     label > input:not([type="checkbox"]), label > select { flex: 1 1 auto; min-width: 0; width: auto; }
     .botones button { flex: 1 1 auto; }
   }
+
+  /* Respaldo automático: tarjeta anidada con punto de estado (verde activo, naranja en pausa, rojo error) */
+  .auto-resp { margin-top: 12px; padding: 12px 14px; border-radius: 16px; background: var(--anidado); }
+  .auto-fila { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; }
+  .auto-fila b { display: block; font-size: 15px; margin-bottom: 2px; }
+  .auto-fila span:not(.auto-punto) { color: var(--muted); }
+  .auto-fila span b { display: inline; font-size: inherit; color: var(--fg); }
+  .auto-punto { flex: none; width: 10px; height: 10px; margin-top: 5px; border-radius: 999px; background: var(--muted); opacity: 0.5;
+    transition: background-color 0.3s var(--curva), opacity 0.3s var(--curva); }
+  .auto-resp[data-estado="ok"] .auto-punto, .auto-resp[data-estado="listo"] .auto-punto, .auto-resp[data-estado="nuevo"] .auto-punto { background: var(--ok); opacity: 1; box-shadow: 0 0 0 4px rgba(52, 199, 89, 0.18); }
+  .auto-resp[data-estado="pausa"] .auto-punto { background: var(--naranja); opacity: 1; animation: latir 1.6s ease-in-out infinite; }
+  .auto-resp[data-estado="error"] .auto-punto { background: var(--rojo); opacity: 1; }
+  .auto-resp .botones { margin-top: 10px; }
+  #avisoRespaldo { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; background: var(--card); border-radius: 18px; padding: 12px 14px; margin: 16px 0;
+    box-shadow: var(--sombra), inset 4px 0 0 var(--naranja); animation: aparecer 0.35s var(--curva); }
+  #avisoRespaldo.oculto { display: none; }
+  #avisoRespaldo span { flex: 1 1 260px; }
+
+  /* Hoja impresa del levantamiento (solo existe al imprimir; papel blanco, tinta negra) */
+  #impresion { display: none; }
+  @media print {
+    body.imprimiendo { background: #fff !important; }
+    body.imprimiendo #app { display: none !important; }
+    body.imprimiendo #impresion { display: block; }
+  }
+  @page { size: letter; margin: 12mm 11mm 14mm;
+    @bottom-right { content: "Página " counter(page) " de " counter(pages); font: 8pt -apple-system, "Segoe UI", sans-serif; color: #555; } }
+  #impresion { font: 9.5pt/1.35 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif; color: #000; }
+  #impresion * { animation: none !important; }
+  .imp-cab { display: flex; justify-content: space-between; align-items: flex-end; gap: 8mm; padding-bottom: 3mm; margin-bottom: 4mm; border-bottom: 1.5pt solid #000; }
+  .imp-cab h1 { margin: 0; font-size: 17pt; letter-spacing: -0.02em; }
+  .imp-cab p { margin: 1mm 0 0; color: #444; }
+  .imp-cab .imp-fecha { text-align: right; font-variant-numeric: tabular-nums; }
+  .imp-datos { display: grid; grid-template-columns: auto 1fr auto auto; gap: 1.5mm 6mm; margin: 0 0 4mm; }
+  .imp-datos > div { min-width: 0; }
+  .imp-datos dt { font-size: 7pt; color: #555; text-transform: uppercase; letter-spacing: 0.04em; }
+  .imp-datos dd { margin: 0; font-size: 10.5pt; font-weight: 600; }
+  .imp-res { display: flex; gap: 2.5mm; margin: 0 0 4mm; }
+  .imp-res div { flex: 1; border: 0.75pt solid #999; border-radius: 2.5mm; padding: 2mm 3mm; font-size: 7.5pt; color: #333; }
+  .imp-res b { display: block; font-size: 15pt; color: #000; font-variant-numeric: tabular-nums; }
+  #impresion h2 { font-size: 11pt; margin: 5mm 0 1.5mm; letter-spacing: -0.01em; }
+  #impresion h2 small { font-weight: 400; color: #555; font-size: 8.5pt; }
+  #impresion table { width: 100%; border-collapse: collapse; font-size: 8.3pt; background: none !important; box-shadow: none !important; border-radius: 0; }
+  #impresion th { position: static; text-align: left; padding: 1.3mm 1.5mm; border-bottom: 1pt solid #000; background: none; color: #333;
+    font-size: 7pt; text-transform: uppercase; letter-spacing: 0.03em; }
+  #impresion td { padding: 1.3mm 1.5mm; border-bottom: 0.5pt solid #bbb; vertical-align: top; font-variant-numeric: tabular-nums; background: none; }
+  #impresion tr { break-inside: avoid; }
+  #impresion .imp-n { color: #666; width: 6mm; }
+  #impresion .imp-placa { font-weight: 700; }
+  #impresion .imp-nueva td { background: #f1f1f1 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #impresion .imp-visto { width: 11mm; text-align: center; }
+  .imp-caja { display: inline-block; width: 3.6mm; height: 3.6mm; border: 0.75pt solid #000; border-radius: 0.8mm; vertical-align: middle; }
+  .imp-vacio { color: #555; font-style: italic; }
+  .imp-firmas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10mm; margin-top: 18mm; break-inside: avoid; }
+  .imp-firmas div { border-top: 0.75pt solid #000; padding-top: 1.5mm; text-align: center; font-size: 8.5pt; }
+  .imp-firmas small { display: block; color: #555; font-size: 7.5pt; }
+  .imp-pie { margin-top: 6mm; font-size: 7.5pt; color: #555; }
 </style>
 </head>
 <body>
@@ -533,12 +590,17 @@
   <div class="botones"><button id="respaldoBajar">Descargar respaldo</button><button id="respaldoSubir">Restaurar respaldo</button></div>
   <input type="file" id="respaldoArchivo" accept=".json,application/json" class="oculto">
   <div id="respaldoEstado" class="muted"></div>
+  <div id="autoRespaldo" class="auto-resp" data-estado="apagado">
+    <div class="auto-fila"><span class="auto-punto" aria-hidden="true"></span><div><b>Respaldo automático</b><span id="autoEstado"></span></div></div>
+    <div class="botones"><button id="autoActivar">Activar respaldo automático</button><button id="autoReactivar" class="palomita oculto">Reactivar</button><button id="autoApagar" class="oculto">Apagar</button></div>
+  </div>
 </details>
 <label id="temaFila" class="tema-fila"><span>Modo oscuro</span><input type="checkbox" id="prefOscuro"></label>
 </aside>
 <main id="principal">
 <p id="avisoCarga" class="err"><b>La página no terminó de cargar.</b> Ábrela directamente en Google Chrome o Microsoft Edge (clic derecho en el archivo → Abrir con → Chrome/Edge). Las vistas previas y otros navegadores no la ejecutan.</p>
 <p id="avisoAlmacen" class="warn oculto"></p>
+<p id="avisoRespaldo" class="oculto"><span>El respaldo automático está en pausa y hay cambios sin respaldar: el navegador pide permiso otra vez.</span><button id="avisoRespaldoBtn" class="palomita">Reactivar</button></p>
 <div id="barra"><div id="tituloModulo"></div><div id="franja"></div></div>
 <div id="ayudaModulo" class="muted"></div>
 <datalist id="listaCr"></datalist>
@@ -558,6 +620,7 @@
 <div id="destello" aria-hidden="true"></div>
 </main>
 </div>
+<div id="impresion"></div>
 <script src="lib/xlsx.full.min.js"></script>
 <script src="lib/jszip.min.js"></script>
 <script src="js/plantilla.js"></script>
