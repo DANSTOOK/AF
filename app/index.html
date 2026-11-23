@@ -150,7 +150,7 @@
   /* Íconos de módulo: insignia cuadrada redondeada con color propio */
   .ico { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 8px; display: inline-grid; place-items: center; color: #fff; background: var(--c, var(--azul)); }
   .ico svg { width: 18px; height: 18px; }
-  .m-movimientos { --c: #007AFF; } .m-plaqueo { --c: #FF9500; } .m-anexo3 { --c: #FF3B30; } .m-levantamiento { --c: #5856D6; } .m-consultas { --c: #32ADE6; } .m-maf { --c: #34C759; }
+  .m-movimientos { --c: #007AFF; } .m-plaqueo { --c: #FF9500; } .m-anexo3 { --c: #FF3B30; } .m-levantamiento { --c: #5856D6; } .m-maf { --c: #34C759; }
 
   /* Navegación: en angosto, fichas que se desplazan de lado y se quedan arriba */
   #nav { position: sticky; top: 0; z-index: 6; display: flex; gap: 6px; margin: 0 -16px; padding: 10px 16px; overflow-x: auto; scrollbar-width: none;
@@ -547,7 +547,7 @@
   /* Teléfono: barra de pestañas abajo (como en iPhone) y formularios a lo ancho */
   @media (max-width: 599px) {
     #app { padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
-    #nav { position: fixed; top: auto; bottom: 0; left: 0; right: 0; margin: 0; z-index: 20; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0;
+    #nav { position: fixed; top: auto; bottom: 0; left: 0; right: 0; margin: 0; z-index: 20; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0;
       padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); overflow: visible; border-bottom: 0; border-top: 1px solid var(--sep); }
     #nav a { flex-direction: column; justify-content: center; gap: 2px; padding: 4px 0; background: transparent; border-radius: 12px; font-size: 10.5px; color: var(--muted); }
     #nav a .ico { display: inline-grid; width: 30px; height: 26px; background: transparent; color: var(--muted); }
@@ -615,6 +615,108 @@
   .dep-barra i { display: block; height: 100%; border-radius: 999px; background: var(--muted); transition: width 0.5s var(--curva); }
   .dep-txt { margin: 6px 0 4px; }
   #mod-maf [data-c="fichaBox"] { animation: aparecer 0.3s var(--curva); }
+
+  /* ===== Consultar el MAF: mejoras (más filtros, activos, resumen, gráfica por año, guardadas, tabla) ===== */
+  .valor-p.pordep { background: color-mix(in srgb, var(--naranja) 18%, transparent); color: var(--warn); }
+  #mod-maf .stats { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  /* Indicadores de la tarjeta del MAF: botones que abren la consulta */
+  .maf-kpis > button { display: block; width: 100%; min-height: 0; padding: 9px 10px 8px; border-radius: 14px; background: var(--anidado);
+    text-align: left; font: inherit; color: inherit; box-shadow: none; cursor: pointer;
+    transition: transform 0.15s ease-out, background-color 0.2s var(--curva); }
+  .maf-kpis > button:hover:not(:disabled) { background: color-mix(in srgb, var(--azul) 9%, var(--anidado)); }
+  .maf-kpis > button:active:not(:disabled) { transform: scale(0.97); }
+  .maf-kpis > button:disabled { cursor: default; opacity: 1; }
+  .maf-kpis > button.err:hover { background: color-mix(in srgb, var(--rojo) 15%, var(--anidado)); }
+  /* Más filtros: segunda fila de pastillas y rango de valor neto */
+  .chip-mas b { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: rgba(255, 255, 255, 0.25); display: inline-grid; place-items: center; font-size: 12px; }
+  .chip-f:not(.on).chip-mas b { background: var(--azul); color: #fff; }
+  .extras-maf { margin: -2px 0 10px; padding: 10px 12px 2px; border-radius: 16px; background: var(--anidado); animation: aparecer 0.28s var(--curva); }
+  .extras-maf .chips-filtro { margin-bottom: 8px; }
+  .extras-maf .chip-f:not(.on) { background: var(--card); }
+  .rango-maf { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-bottom: 8px; font-size: 15px; }
+  .rango-maf > span { font-weight: 600; }
+  .rango-maf label { margin: 0; }
+  .rango-maf input { width: 130px; font-variant-numeric: tabular-nums; }
+  /* Búsquedas guardadas */
+  .guardadas-maf { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 10px; }
+  .guardadas-maf:empty { display: none; }
+  .g-tit { font-size: 13px; margin-right: 2px; }
+  .guardada { display: inline-flex; align-items: center; border-radius: 999px; background: color-mix(in srgb, var(--naranja) 14%, transparent); }
+  .guardada button { min-height: 34px; background: transparent; box-shadow: none; color: var(--fg); font-size: 14px; font-weight: 500; }
+  .guardada button:first-child { display: inline-flex; align-items: center; gap: 6px; padding: 0 6px 0 12px; }
+  .guardada button:first-child svg { width: 15px; height: 15px; color: var(--naranja); }
+  .guardada .g-borrar { padding: 0 10px 0 4px; color: var(--muted); font-size: 12px; }
+  .g-nueva { min-height: 34px; border-radius: 999px; padding: 0 14px; background: transparent; color: var(--azul); box-shadow: inset 0 0 0 1px var(--sep); font-size: 14px; }
+  .g-form { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .g-form input { min-width: 240px; }
+  .g-form button { min-height: 38px; }
+  /* Gráfica por año (barras apiladas; tocar filtra) */
+  .anios-maf:empty { display: none; }
+  .anios-maf { margin-top: 12px; padding: 12px 14px 8px; border-radius: 16px; background: var(--anidado); }
+  .anios-tit { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 12px; font-size: 13px; margin-bottom: 10px; }
+  .anios-tit b { font-size: 15px; }
+  .ley { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin: 0 4px 0 8px; vertical-align: -1px; }
+  .ley.con, .anio-col .con, .res-barra .con { background: var(--verde); }
+  .ley.dep, .anio-col .dep, .res-barra .dep { background: rgba(142, 142, 147, 0.55); }
+  .anios-barras { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 4px; height: 130px; align-items: end; }
+  .anio-b { display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; height: 100%; min-height: 0; min-width: 0; padding: 0; gap: 4px;
+    background: transparent; box-shadow: none; border-radius: 6px; transition: opacity 0.2s var(--curva), transform 0.15s ease-out; }
+  .anio-b:active { transform: scale(0.95); }
+  .anio-col { display: flex; flex-direction: column-reverse; min-height: 3px; border-radius: 5px 5px 2px 2px; overflow: hidden; transition: height 0.45s var(--curva); }
+  .anio-col i { display: block; min-height: 0; }
+  .anio-t { font-size: 11px; color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; }
+  .anio-b:hover .anio-col { filter: brightness(1.08); box-shadow: 0 0 0 2px color-mix(in srgb, var(--azul) 35%, transparent); }
+  .anio-b.on .anio-col { box-shadow: 0 0 0 2px var(--azul); }
+  .anio-b.on .anio-t { color: var(--azul); font-weight: 700; }
+  .anio-b.atenuado { opacity: 0.35; }
+  /* Barra de resultados: tabla / resumen, columnas, agrupar, exportar e imprimir */
+  .barra-res { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-bottom: 4px; clear: both; }
+  .barra-res .opciones { margin-bottom: 8px; }
+  .barra-res label { margin-bottom: 8px; }
+  .botones-res { display: inline-flex; gap: 8px; margin: 0 0 8px auto; }
+  .botones-res button { min-height: 38px; }
+  /* Filtros puestos: una pastilla por valor con ✕ */
+  .activos-maf { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 8px; }
+  .activos-maf:empty { display: none; }
+  .activo-p { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; min-height: 30px; padding: 0 10px 0 12px; border-radius: 999px; font-size: 13px; font-weight: 500;
+    background: var(--sel); color: var(--fg); box-shadow: none; animation: aparecer 0.25s var(--curva); transition: transform 0.15s ease-out, background-color 0.2s; }
+  .activo-p span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .activo-p i { font-style: normal; font-size: 11px; color: var(--muted); }
+  .activo-p:hover { background: color-mix(in srgb, var(--rojo) 14%, transparent); }
+  .activo-p:hover i { color: var(--err); }
+  .activo-p:active { transform: scale(0.96); }
+  /* Encabezados para ordenar y columnas fijas (Valor y Placa) */
+  .maf-tabla th.ord { cursor: pointer; user-select: none; }
+  .maf-tabla th.ord:hover { color: var(--azul); }
+  .maf-tabla th.on { color: var(--azul); }
+  .maf-tabla .flecha { display: inline-block; min-width: 12px; margin-left: 4px; font-size: 9px; }
+  .maf-tabla .fija { position: sticky; z-index: 1; background: var(--card); }
+  .maf-tabla th.fija { z-index: 3; }
+  .maf-tabla .f0 { left: 0; }
+  .maf-tabla .f1 { left: var(--f1, 110px); box-shadow: 1px 0 0 var(--sep); }
+  .maf-tabla tr.clic:hover > td.fija { background: color-mix(in srgb, var(--relleno) 100%, var(--card)); }
+  .maf-tabla tr.actual > td.fija { background: color-mix(in srgb, var(--azul) 14%, var(--card)); }
+  .maf-tabla .placa-c { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .mas-maf { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 10px; }
+  .mas-maf button { min-height: 38px; }
+  .ejemplos { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; margin-top: 14px; }
+  .ejemplos button { min-height: 34px; border-radius: 999px; padding: 0 14px; font-size: 14px; background: var(--relleno); color: var(--azul); box-shadow: none; }
+  /* Resumen (tabla dinámica) */
+  .maf-tabla .res-t { font-weight: 600; white-space: normal; min-width: 180px; }
+  .maf-tabla .ok-t { color: var(--ok); }
+  .res-barra-th { min-width: 160px; }
+  .res-barra span { display: flex; height: 10px; border-radius: 999px; overflow: hidden; min-width: 4px; transition: width 0.45s var(--curva); }
+  /* Ficha: copiar y ver la tienda */
+  .ficha-acc { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 2px; }
+  .ficha-acc button { min-height: 34px; border-radius: 999px; padding: 0 14px; font-size: 14px; }
+  .ficha-acc .hecho { background: color-mix(in srgb, var(--verde) 18%, transparent); color: var(--ok); }
+  @media (max-width: 599px) {
+    .botones-res { margin-left: 0; width: 100%; } .botones-res button { flex: 1; }
+    .anios-barras { height: 100px; gap: 2px; }
+    .g-form input { min-width: 0; flex: 1; }
+  }
+  /* Impresión de la consulta */
+  #impresion .num { text-align: right; }
 
   /* Filtros de columna tipo Excel: pastillas que abren una lista con selección múltiple */
   .chips-filtro { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 10px; }
@@ -755,7 +857,6 @@
 <div id="mod-plaqueo" class="oculto"></div>
 <div id="mod-anexo3" class="oculto"></div>
 <div id="mod-levantamiento" class="oculto"></div>
-<div id="mod-consultas" class="oculto"></div>
 <div id="mod-maf" class="oculto"></div>
 </div>
 
@@ -773,7 +874,6 @@
 <script src="js/mod-captura.js"></script>
 <script src="js/mod-plaqueo.js"></script>
 <script src="js/mod-levantamiento.js"></script>
-<script src="js/mod-consultas.js"></script>
 <script src="js/mod-maf.js"></script>
 <script src="js/inicio.js"></script>
 </body>

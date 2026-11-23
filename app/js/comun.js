@@ -11,7 +11,9 @@
   var LS_ENV = 'af_enviados';
   // Módulos con captura propia (cuentan como memoria compartida) y módulos de navegación
   var MODULOS = ['movimientos', 'plaqueo', 'anexo3', 'levantamiento'];
-  var NAV = ['movimientos', 'plaqueo', 'anexo3', 'levantamiento', 'consultas', 'maf'];
+  var NAV = ['movimientos', 'plaqueo', 'anexo3', 'levantamiento', 'maf'];
+  // La pestaña de consultas se unió a "Consultar el MAF": los enlaces viejos llevan ahí
+  function alias(m) { return m === 'consultas' ? 'maf' : m; }
 
   var App = {
     maf: null,
@@ -157,12 +159,18 @@
         '<span class="maf-listo">Listo</span>' +
       '</div>' +
       '<div class="maf-kpis">' +
-        '<div><b>' + m.total.toLocaleString() + '</b><span>activos</span></div>' +
-        '<div class="' + (m.sinPlaca ? 'warn' : '') + '"><b>' + m.sinPlaca.toLocaleString() + '</b><span>sin placa</span></div>' +
-        '<div class="' + (dup ? 'err' : 'ok') + '"' + (dup ? ' title="Placas duplicadas en el MAF: ' + esc(m.placasDuplicadas.join(', ')) + '"' : '') + '><b>' + dup + '</b><span>' + (dup === 1 ? 'duplicada' : 'duplicadas') + '</span></div>' +
+        '<button data-ir-maf="todos" title="Consultar el MAF completo"><b>' + m.total.toLocaleString() + '</b><span>activos</span></button>' +
+        '<button class="' + (m.sinPlaca ? 'warn' : '') + '" data-ir-maf="sinPlaca" title="Ver los activos pendientes de placa"><b>' + m.sinPlaca.toLocaleString() + '</b><span>sin placa</span></button>' +
+        '<button class="' + (dup ? 'err' : 'ok') + '" data-ir-maf="duplicadas" title="' + (dup ? 'Ver los activos con placa duplicada: ' + esc(m.placasDuplicadas.join(', ')) : 'No hay placas duplicadas') + '"' + (dup ? '' : ' disabled') + '><b>' + dup + '</b><span>' + (dup === 1 ? 'duplicada' : 'duplicadas') + '</span></button>' +
       '</div>' +
       '<div class="maf-corte">' + (edad ? '<span class="maf-edad ' + edad.cls + '" title="' + esc(edad.titulo) + '">' + esc(edad.txt) + '</span>' : '') + '</div>';
   }
+
+  // Los indicadores de la tarjeta abren "Consultar el MAF" ya filtrado
+  $('estadoMaf').addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-ir-maf]');
+    if (b && App.abrirConsultaMaf) App.abrirConsultaMaf(b.getAttribute('data-ir-maf'));
+  });
 
   // Antigüedad del corte del MAF ("02/11/2026 12:42 PM" -> hace 21 días): verde hasta un mes, naranja hasta dos, rojo después
   function edadCorte(fecha) {
@@ -702,26 +710,24 @@
 
   // ---------- Módulos (una sola página; al cambiar de pestaña el módulo entra deslizándose) ----------
   var NOMBRES = { movimientos: 'Altas, bajas y transferencias', plaqueo: 'Plaqueo por factura', anexo3: 'Bajas Anexo 3 (desincorporación)',
-    levantamiento: 'Levantamiento de tienda', consultas: 'Consultas y seguimiento', maf: 'Consultar el MAF' };
+    levantamiento: 'Levantamiento de tienda', maf: 'Consultar el MAF' };
   var AYUDA = {
     movimientos: 'Un equipo a la vez: poner placa (alta), dar de baja o transferir a otra tienda. Llena el Formato V.2.',
     plaqueo: 'Equipo nuevo de una factura que ya está en el MAF sin placa: escanee las placas una tras otra. Llena el alta del Formato V.2.',
     anexo3: 'Bajas con desincorporación oficial. Llena el Anexo 3 (50 equipos por archivo; si son más, se parte solo).',
     levantamiento: 'Escanee todo lo que hay en una tienda y compárelo con el MAF: qué falta, qué sobra y qué está en otra tienda.',
-    consultas: 'Ver los activos de una tienda, los pendientes de plaqueo y si AF ya aplicó lo que se envió. Aquí no se captura nada.',
     maf: 'Busque por placa, No. Activo, serie, tienda o artículo y vea todas las columnas del MAF: año de adquisición, costo, depreciación y si aún tiene valor. Solo consulta: aquí no se cambia nada.'
   };
-  var CORTOS = { movimientos: 'Movimientos', plaqueo: 'Plaqueo', anexo3: 'Anexo 3', levantamiento: 'Levantamiento', consultas: 'Consultas', maf: 'MAF' };
+  var CORTOS = { movimientos: 'Movimientos', plaqueo: 'Plaqueo', anexo3: 'Anexo 3', levantamiento: 'Levantamiento', maf: 'MAF' };
   // Guía de cada módulo (didáctica): los pasos en el orden en que se trabaja
   var PASOS = {
     movimientos: ['Elige Alta, Baja o Transferencia', 'Escanea la placa', 'Revisa la ficha y presiona ✓', 'Descarga el Excel'],
     plaqueo: ['Captura la factura', 'Escanea cada placa', 'Corrige serie, marca o modelo si hace falta', 'Descarga el Excel'],
     anexo3: ['Llena los datos de la baja', 'Escanea las placas', 'Revisa y presiona ✓', 'Descarga el Anexo 3'],
     levantamiento: ['Elige la tienda', 'Escanea la placa del activo', 'Revisa serie, marca y modelo', 'Descarga el formato de alta'],
-    consultas: ['Elige qué consultar', 'Toca un indicador para filtrar', 'Exporta o imprime'],
-    maf: ['Escribe o escanea lo que buscas', 'Filtra por plaza, tienda, artículo o año', 'Toca un renglón para ver su ficha', 'Exporta si lo necesitas']
+    maf: ['Escribe o escanea lo que buscas', 'Filtra como en Excel o toca un año', 'Cambia a Resumen para ver totales', 'Exporta, imprime o guarda la búsqueda']
   };
-  App.moduloActual = (location.hash || '').replace('#', '') || 'movimientos';
+  App.moduloActual = alias((location.hash || '').replace('#', '')) || 'movimientos';
   if (NAV.indexOf(App.moduloActual) < 0) App.moduloActual = 'movimientos';
 
   // Íconos de cada módulo (trazo uniforme de 1.75, estilo SF Symbols / lucide)
@@ -730,7 +736,6 @@
     plaqueo: '<path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r="1"/>',
     anexo3: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/>',
     levantamiento: '<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 7v10"/><path d="M12 7v10"/><path d="M16 7v10"/>',
-    consultas: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
     maf: '<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5"/><path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3"/>'
   };
   function icono(m) {
@@ -823,6 +828,7 @@
   }
 
   function irAModulo(m) {
+    m = alias(m);
     if (NAV.indexOf(m) < 0) m = 'movimientos';
     var antes = App.moduloActual;
     if (m === antes) return;

@@ -10,8 +10,7 @@ Arriba hay cinco pestañas en la misma página; al hacer clic el módulo entra d
 | Plaqueo por factura | Equipo de renovación ya cargado en el MAF: factura → escanear placas | V.2, pestaña Alta de código |
 | Bajas Anexo 3 | Desincorporación oficial; lista pegada; baja masiva | Formato de Movimientos AF (Anexo 3), 50 por archivo (se parte solo) |
 | Levantamiento de tienda | Elegir la tienda y poner placa a sus activos (alta con serie, marca y modelo); opcional: revisar todo contra el MAF | V.2, pestaña Alta de código (para subir a List) + Excel de la revisión |
-| Consultas y seguimiento | Activos de una tienda, pendientes de plaqueo, seguimiento de lo enviado | Excel de consulta |
-| Consultar el MAF | Buscar cualquier activo y ver todas las columnas del MAF: año, costo, depreciación y si tiene valor (solo consulta) | Excel de resultados |
+| Consultar el MAF | Buscar y filtrar como en Excel cualquier activo: todas las columnas, año, depreciación, valor, pendientes de placa; resumen por grupo (solo consulta) | Excel de resultados o resumen; hoja impresa |
 
 ## Uso
 1. **MAF**: arrastrar el Excel del MAF a la zona "Arrastre aquí el MAF" o a cualquier parte de la ventana (o hacer clic en la zona para elegirlo); cualquier versión (.xlsx). Tarda 10-20 s en segundo plano, con barra de avance; luego se recupera solo. Ya cargado, la tarjeta muestra:
@@ -35,23 +34,34 @@ Arriba hay cinco pestañas en la misma página; al hacer clic el módulo entra d
    - El formato sale en la pestaña Alta de código del V.2 (activo, placa, serie, modelo, marca, fecha), listo para que AF lo suba a List.
    - *Imprimir hoja para firma*: hoja tamaño carta con los datos de la tienda, un resumen, los movimientos capturados de esa tienda, todos sus activos del MAF con una casilla "Visto" (palomeada si se escaneó en la revisión) y tres firmas: encargado(a) de tienda, quien levantó y responsable de AF. En el cuadro de impresión se puede elegir "Guardar como PDF".
    - Opcional, plegado: *Revisar todo lo de la tienda contra el MAF* (escanear todo → transferencias, altas de placas que no están en el MAF y bajas de lo no encontrado). Con ese recuadro abierto el escáner llena esa lista.
-8. **Consultas y seguimiento**:
-   - *Consulta de tienda*: todos los activos del CR con su estado, filtro, exportar o imprimir.
-   - *Pendientes de plaqueo*: por tienda o por factura, con detalle y exportación.
-   - *Seguimiento*: todo Excel generado queda registrado; al cargar un MAF más nuevo dice si cada movimiento ya se aplicó, sigue pendiente o se aplicó distinto. *Quitar los aplicados* limpia la lista.
-9. **Consultar el MAF** (solo consulta, no modifica nada):
-   - Un buscador para placa, No. Activo, serie, CR, tienda o artículo. Se pueden combinar palabras ("impresora 36UCC", "laptop tijuana este"); no importan acentos ni espacios ("laptop" encuentra "LAP TOP").
-   - Filtros como en Excel, en pastillas: **Plaza**, **Tienda / área** (CR), **Artículo**, **Marca** y **Año de adquisición**, más *Todos / Con valor / Depreciados*.
-     - Cada pastilla abre una lista con buscador. Se pueden marcar varios valores, por ejemplo varios artículos de varios años; los marcados se combinan entre filtros.
-     - Cada lista solo ofrece lo que existe con la búsqueda y los demás filtros, con cuántos activos hay de cada uno, igual que el filtro de Excel.
-     - *Marcar los de la lista* marca todo lo que coincide con lo escrito en el buscador de la lista. *Sin filtro* lo quita. *Quitar filtros* limpia todos.
-     - En teléfono la lista sube como hoja desde abajo.
-   - Los indicadores suman resultados, con valor, depreciados, valor neto y costo. El Excel exportado trae una hoja *Criterios* con la búsqueda y los filtros usados.
-   - La tabla muestra todas las columnas del MAF, en su orden, más la columna *Valor*. Se ven 200 renglones; *Exportar resultados a Excel* saca todos.
-   - Al tocar un renglón (o si sale un solo resultado) aparece la ficha del activo: fecha de adquisición y antigüedad, costo, depreciación acumulada (% del costo), valor neto, una barra de depreciación y todas las columnas agrupadas.
-   - Con el escáner se lee la placa y sale su ficha, con el aviso grande de abajo.
-   - **Depreciado** = la columna "Remantente" (meses de vida útil que le quedan) está en 0. Puede conservar un valor neto pequeño, que es el valor de rescate. Si el MAF no trae esa columna, se usa el valor neto.
+8. **Consultar el MAF** (solo consulta, no modifica nada). Reemplaza a la antigua pestaña "Consultas y seguimiento"; los enlaces viejos abren esta.
+   - **Buscador** para placa, No. Activo, serie, CR, tienda o artículo. Se pueden combinar palabras ("impresora 36UCC", "laptop tijuana este"); no importan acentos ni espacios ("laptop" encuentra "LAP TOP"). Con el escáner se lee la placa y sale su ficha.
+   - **Valor:** *Todos / Con valor / Por depreciarse / Depreciados*.
+     - **Depreciado** = la columna "Remantente" (meses de vida útil que le quedan) está en 0. Puede conservar un valor neto pequeño, que es el valor de rescate; si el MAF no trae esa columna, se usa el valor neto.
+     - **Por depreciarse** = tiene valor, pero le quedan 6 meses o menos.
+   - **Filtros como en Excel**, en pastillas: Plaza, Tienda / área (CR), Artículo, Marca, Año de adquisición y Estado de placa (con placa, con placa duplicada, pendiente de placa, no plaqueable).
+     - *Más filtros* abre una segunda fila: Mes de adquisición, Factura, Origen, Cuenta, Familia y un rango de valor neto ("de $… a $…").
+     - Cada pastilla abre una lista con buscador y cuántos activos hay de cada valor; se pueden marcar varios. Cada lista solo ofrece lo que existe con la búsqueda y los demás filtros, igual que en Excel. *Marcar los de la lista*, *Sin filtro*, *Quitar filtros*. En teléfono la lista sube como hoja desde abajo.
+     - Arriba de los resultados, una pastilla por cada cosa filtrada; su ✕ la quita.
+   - **Indicadores:** resultados, con valor, por depreciarse, depreciados, valor neto y costo. Tocar *con valor*, *por depreciarse* o *depreciados* filtra por ese estado (otro toque lo quita).
+   - **Gráfica por año de adquisición:** barras de con valor y depreciados; tocar un año lo filtra, y se pueden marcar varios.
+   - **Búsquedas guardadas:** *+ Guardar esta búsqueda* le pone nombre a la combinación de búsqueda y filtros. Un toque la vuelve a aplicar y la ✕ la borra. Van en el respaldo.
+   - **Tabla:**
+     - *Vista corta* (placa, activo, descripción, marca, modelo, serie, año, valor neto, meses restantes, tienda) o *Todas las columnas* del MAF.
+     - Valor y Placa quedan fijas a la izquierda.
+     - Tocar un encabezado ordena (otro toque invierte).
+     - Se ven 200 renglones; *Ver 200 más* trae otros 200.
+   - **Resumen** (tabla dinámica): agrupa por la columna elegida (plaza, tienda, artículo, año, estado de placa, factura, etc.) con activos, con valor, depreciados, valor neto, costo y una barra. Tocar un encabezado ordena; tocar un grupo muestra sus activos en la tabla.
+   - **Exportar a Excel** saca todos los resultados (o el resumen) más una hoja *Criterios*. **Imprimir** hace una hoja carta con los criterios, los totales y la tabla corta o el resumen (hasta 3,000 renglones; se puede guardar como PDF).
+   - **Ficha del activo:** al tocar un renglón, o si sale un solo resultado. Trae:
+     - adquisición y antigüedad;
+     - costo, depreciación acumulada (% del costo) y valor neto;
+     - en qué mes termina o terminó de depreciarse, y la barra de depreciación;
+     - todas las columnas agrupadas;
+     - *Copiar placa / activo / serie* y *Ver los demás activos de esta tienda*.
+   - Desde la tarjeta del MAF, tocar *activos*, *sin placa* o *duplicadas* abre esta pestaña ya filtrada.
    - Si el MAF guardado en el navegador se cargó antes de esta versión, sale un aviso para volver a cargarlo y ver todas las columnas.
+   - Ya no hay pantalla de "seguimiento de lo enviado". El registro de lo generado se sigue guardando en el navegador y en el respaldo.
 
 ## Escáner (pistola USB, p. ej. Zebra)
 - **Serie distinta:** en altas (Altas, Plaqueo y Levantamiento), si la serie escaneada o escrita no coincide con la que el MAF tiene para ese activo, sale un aviso naranja con las dos series. No bloquea: verifique que sea el mismo equipo.
@@ -93,12 +103,12 @@ En el V.2 se escribe desde el renglón 2: el ejemplo del formato se sobrescribe 
 - Guía en cada módulo: bajo el título están sus pasos numerados (por ejemplo: Elige la tienda › Escanea la placa › Revisa serie, marca y modelo › Descarga el formato). Las secciones usan el mismo círculo numerado.
 - Movimiento: los números de los indicadores cuentan hasta su valor, el aviso de lectura entra con rebote (el de error además se sacude), los módulos cambian con un desvanecido corto, el título se compacta al bajar y las secciones plegables se abren con suavidad. Si Windows tiene las animaciones desactivadas, no se mueve nada.
 - En teléfono (menos de 600 px) los módulos van en una barra de pestañas abajo, con ícono y nombre corto.
-- Los resúmenes son indicadores grandes (Consultas, Plaqueo, Levantamiento); en Consultas, tocar un indicador filtra por ese estado. Los equipos por tipo se ven como barras.
+- Los resúmenes son indicadores grandes (Consultar el MAF, Plaqueo, Levantamiento); en Consultar el MAF, tocar un indicador filtra por ese estado.
 - Cada módulo tiene título grande con su ícono, la franja de qué se captura, el paso "Ahora" resaltado y la vista previa como ficha (cada dato con su etiqueta). Tarjetas redondeadas, opciones como interruptores, tablas como listas agrupadas. Claro por defecto; el modo oscuro se activa con el interruptor "Modo oscuro" de la barra lateral y se recuerda.
 - Todo el diseño está en el bloque <style> de index.html (variables al inicio). El cambio fue solo visual: la lógica, los formatos y el escáner no cambiaron.
 
 ## Desarrollo
 - `js/engine.js` — MAF, cruce y validaciones. `js/writer.js` — escritura en los formatos (edita el XML, conserva todo).
-- `js/comun.js` — MAF, almacenamiento, botones, registro de enviados, exportar Excel. `js/mod-captura.js` — movimientos y Anexo 3 (lista pegada, baja masiva). `js/mod-plaqueo.js` — plaqueo. `js/mod-levantamiento.js` — levantamiento. `js/mod-consultas.js` — consultas y seguimiento.
+- `js/comun.js` — MAF, almacenamiento, botones, registro de enviados, exportar Excel. `js/mod-captura.js` — movimientos y Anexo 3 (lista pegada, baja masiva). `js/mod-plaqueo.js` — plaqueo. `js/mod-levantamiento.js` — levantamiento. `js/mod-maf.js` — Consultar el MAF.
 - Formatos en `../plantilla/`; incrustarlos con `node tools/build-plantilla.js`. Archivo único: `node tools/build-single.js`.
 - Pruebas: `npm test -- "ruta\MAF.xlsx"`.
