@@ -142,21 +142,51 @@
     $('modulos').classList.toggle('oculto', !m);       // sin MAF no hay nada que capturar
     // Con MAF cargado la zona para arrastrar se hace compacta ("Arrastre otro MAF"); sin MAF es grande
     $('zonaMaf').classList.toggle('compacta', !!m);
-    $('zonaMaf').querySelector('.zona-t1').textContent = m ? 'Arrastre aquí otro MAF' : 'Arrastre aquí el MAF';
+    $('zonaMaf').querySelector('.zona-t1').textContent = m ? 'Cambiar MAF' : 'Arrastre aquí el MAF';
+    $('zonaMaf').querySelector('.zona-t2').textContent = m ? 'arrástrelo aquí o haga clic' : 'o haga clic para elegir el Excel';
     $('sinMaf').classList.toggle('oculto', !!m);
     if (!m) { $('estadoMaf').innerHTML = ''; return; }
-    // Tarjeta mínima: solo la zona para arrastrar y una línea con lo esencial del MAF
-    $('estadoMaf').innerHTML = '<div class="maf-linea"><span class="maf-ok" title="' + esc(m.archivo || '') + '">MAF listo</span>' +
-      '<span class="maf-dato"><b>' + m.total.toLocaleString() + '</b> activos</span>' +
-      '<span class="maf-dato warn"><b>' + m.sinPlaca.toLocaleString() + '</b> sin placa</span>' +
-      (m.placasDuplicadas.length ? '<span class="maf-dato err" title="Placas duplicadas en el MAF: ' + esc(m.placasDuplicadas.join(', ')) + '"><b>' + m.placasDuplicadas.length + '</b> duplicadas</span>' : '') +
-      '</div><div class="muted maf-corte" title="' + esc(m.archivo || '') + '">' + esc(m.archivo || '') + ' · corte ' + esc(m.fecha || 's/f') + '</div>';
+    // Tarjeta del MAF cargado: el archivo como documento, tres indicadores y qué tan reciente es el corte
+    var nombre = String(m.archivo || 'MAF').replace(/\.(xlsx|xls|xlsb|csv)$/i, '');
+    var partes = String(m.fecha || '').split(' '), edad = edadCorte(m.fecha);
+    var dup = m.placasDuplicadas.length;
+    $('estadoMaf').innerHTML =
+      '<div class="maf-doc" title="' + esc((m.archivo || '') + (m.fecha ? ' · corte ' + m.fecha : '')) + '">' +
+        '<span class="maf-xls" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h8"/><path d="M12 11v8"/></svg></span>' +
+        '<span class="maf-doc-txt"><b>' + esc(nombre) + '</b><span>' + (m.fecha ? 'Corte del ' + esc(partes[0]) : 'Sin fecha de corte') + '</span></span>' +
+        '<span class="maf-listo">Listo</span>' +
+      '</div>' +
+      '<div class="maf-kpis">' +
+        '<div><b>' + m.total.toLocaleString() + '</b><span>activos</span></div>' +
+        '<div class="' + (m.sinPlaca ? 'warn' : '') + '"><b>' + m.sinPlaca.toLocaleString() + '</b><span>sin placa</span></div>' +
+        '<div class="' + (dup ? 'err' : 'ok') + '"' + (dup ? ' title="Placas duplicadas en el MAF: ' + esc(m.placasDuplicadas.join(', ')) + '"' : '') + '><b>' + dup + '</b><span>' + (dup === 1 ? 'duplicada' : 'duplicadas') + '</span></div>' +
+      '</div>' +
+      '<div class="maf-corte">' + (edad ? '<span class="maf-edad ' + edad.cls + '" title="' + esc(edad.titulo) + '">' + esc(edad.txt) + '</span>' : '') + '</div>';
+  }
+
+  // Antigüedad del corte del MAF ("02/11/2026 12:42 PM" -> hace 21 días): verde hasta un mes, naranja hasta dos, rojo después
+  function edadCorte(fecha) {
+    var p = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(String(fecha || ''));
+    if (!p) return null;
+    var corte = new Date(+p[3], +p[2] - 1, +p[1]), hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    var dias = Math.round((hoy - corte) / 86400000);
+    if (dias < 0 || dias > 3650) return null;
+    var txt = dias === 0 ? 'Corte de hoy' : dias === 1 ? 'Corte de ayer' : 'Corte de hace ' + dias + ' días';
+    var cls = dias <= 31 ? 'fresco' : dias <= 62 ? 'medio' : 'viejo';
+    return { txt: txt, cls: cls, titulo: cls === 'fresco' ? 'MAF al día' : 'Conviene cargar un MAF más reciente: lo que AF aplicó después del corte no aparece.' };
+  }
+
+  // Mientras se lee o se recupera el MAF: etapa, archivo y una barra de avance estimada
+  function pintarCargandoMaf(titulo, detalle, pct) {
+    $('estadoMaf').innerHTML = '<div class="maf-cargando"><span class="maf-giro" aria-hidden="true"></span><span class="maf-doc-txt"><b>' + esc(titulo) + '</b><span>' + esc(detalle) + '</span></span></div>' +
+      '<div class="maf-barra' + (pct == null ? ' indefinida' : '') + '"><i' + (pct == null ? '' : ' style="width:' + Math.max(4, Math.min(96, pct)).toFixed(0) + '%"') + '></i></div>';
   }
 
   // Dato chico del MAF (cuánto tardó, si se recuperó) junto a la fecha de corte, no suelto debajo de los indicadores
   function notaMaf(texto) {
     var c = $('estadoMaf').querySelector('.maf-corte');
-    if (c) c.insertAdjacentHTML('beforeend', ' · ' + esc(texto));
+    if (c) c.insertAdjacentHTML('beforeend', '<span class="maf-nota">' + esc(texto) + '</span>');
     else $('estadoMaf').insertAdjacentHTML('beforeend', ' <span class="muted">(' + esc(texto) + ')</span>');
   }
 
@@ -256,7 +286,9 @@
     if (!f) return;
     var t0 = Date.now(), etapa = 'Leyendo el archivo';
     function pintar() {
-      $('estadoMaf').textContent = etapa + ' ' + f.name + '… ' + Math.round((Date.now() - t0) / 1000) + ' s (el MAF completo tarda unos 10-20 s)';
+      var s = (Date.now() - t0) / 1000;
+      // El MAF completo tarda unos 10-20 s: la barra avanza rápido al principio y se frena cerca del final
+      pintarCargandoMaf(etapa + '…', Math.round(s) + ' s de unos 15 · ' + f.name, 100 * (1 - Math.exp(-s / 9)));
     }
     pintar();
     var reloj = setInterval(pintar, 500);
@@ -1053,10 +1085,10 @@
     iniciarAuto();
     pintarNav();
     $('mod-' + App.moduloActual).classList.remove('oculto');
-    $('estadoMaf').textContent = 'Buscando el último MAF cargado…';
+    pintarCargandoMaf('Buscando el último MAF…', 'Guardado en este navegador', null);
     idb('readonly', function (s) { return s.get('actual'); }).then(function (c) {
       if (c && c.registros && !App.maf) {
-        $('estadoMaf').textContent = 'Recuperando el último MAF cargado (' + c.registros.length.toLocaleString() + ' activos)…';
+        pintarCargandoMaf('Recuperando el último MAF…', (c.archivo || 'MAF') + ' · ' + c.registros.length.toLocaleString() + ' activos', null);
         setTimeout(function () {
           usarMaf(AF.indexarMAF(c));
           notaMaf('recuperado de la última carga');

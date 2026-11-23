@@ -454,6 +454,67 @@
   .maf-dato.warn b { color: var(--warn); } .maf-dato.err b { color: var(--err); }
   .maf-corte { font-size: 12px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+  /* ===== Marca y tarjeta del MAF (rediseño) ===== */
+  #marca { gap: 14px; padding: 20px 4px 16px; }
+  .logo { position: relative; width: 48px; height: 48px; border-radius: 13px; overflow: hidden;
+    background: linear-gradient(155deg, #3395FF 0%, #0A6CFF 45%, #5E5CE6 100%);
+    box-shadow: 0 6px 16px rgba(10, 108, 255, 0.32), inset 0 0 0 0.5px rgba(255, 255, 255, 0.25); }
+  .logo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 55%); pointer-events: none; }
+  .logo svg { width: 27px; height: 27px; color: #fff; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.15)); }
+  #marca b { font-size: 24px; letter-spacing: -0.025em; }
+  #marca span { display: block; margin-top: 2px; }
+
+  /* Con MAF: documento arriba, indicadores, antigüedad y al final el renglón discreto para cambiarlo */
+  #mafBox { padding: 14px; }
+  #mafBox:has(.zona.compacta) { display: flex; flex-direction: column; }
+  #mafBox:has(.zona.compacta) #estadoMaf { order: 1; margin: 0; }
+  #mafBox:has(.zona.compacta) .zona { order: 2; margin-top: 12px; }
+  .maf-doc, .maf-cargando { display: flex; align-items: center; gap: 12px; }
+  .maf-xls { flex: none; position: relative; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; color: #fff;
+    background: linear-gradient(155deg, #34C759, #1F8A3B); box-shadow: 0 5px 14px rgba(36, 138, 61, 0.28); }
+  .maf-xls svg { width: 24px; height: 24px; }
+  .maf-doc-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .maf-doc-txt b { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .maf-doc-txt > span { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .maf-listo { flex: none; display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;
+    color: var(--ok); background: color-mix(in srgb, var(--verde) 15%, transparent); }
+  .maf-listo::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--verde); animation: latido 2.4s ease-in-out infinite; }
+  @keyframes latido { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--verde) 45%, transparent); } 50% { box-shadow: 0 0 0 4px transparent; } }
+  .maf-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 12px; }
+  .maf-kpis > div { min-width: 0; padding: 9px 10px 8px; border-radius: 14px; background: var(--anidado); }
+  .maf-kpis b { display: block; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1.15;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .maf-kpis span { display: block; font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+  .maf-kpis .warn b { color: var(--warn); } .maf-kpis .err b { color: var(--err); } .maf-kpis .ok b { color: var(--ok); }
+  .maf-kpis .err { background: color-mix(in srgb, var(--rojo) 9%, var(--anidado)); cursor: help; }
+  #estadoMaf .maf-corte { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 10px; font-size: 12px; color: var(--muted); white-space: normal; }
+  #estadoMaf .maf-corte:empty { display: none; }
+  .maf-edad { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+  .maf-edad::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .maf-edad.fresco { color: var(--ok); } .maf-edad.medio { color: var(--warn); } .maf-edad.viejo { color: var(--err); }
+  .maf-nota { display: inline-flex; align-items: center; gap: 10px; }
+  .maf-edad + .maf-nota::before, .maf-nota + .maf-nota::before { content: ''; width: 3px; height: 3px; border-radius: 50%; background: currentColor; opacity: 0.6; }
+  /* Renglón para cambiar el MAF: discreto, como botón secundario (al arrastrar un archivo sigue creciendo y brillando) */
+  .zona.compacta { min-height: 44px; padding: 6px 12px; gap: 10px; border-radius: 14px; border: 1.5px dashed var(--sep); background: transparent; }
+  .zona.compacta::before { display: none; }
+  .zona.compacta .zona-ico { width: 28px; height: 28px; border-radius: 8px; background: var(--relleno); color: var(--azul); box-shadow: none; }
+  .zona.compacta .zona-ico svg { width: 17px; height: 17px; }
+  .zona.compacta .zona-txt { flex-direction: row; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+  .zona.compacta .zona-t1 { font-size: 14px; color: var(--azul); font-weight: 600; }
+  .zona.compacta .zona-t2 { font-size: 12px; }
+  .zona.compacta:hover { transform: none; box-shadow: none; background: var(--relleno); border-color: transparent; }
+  body.arrastrando .zona.compacta .zona-ico { background: var(--azul); color: #fff; }
+  /* Leyendo: ruedita y barra de avance */
+  .maf-giro { flex: none; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--anidado); }
+  .maf-giro::after { content: ''; width: 20px; height: 20px; border-radius: 50%; border: 2.5px solid var(--relleno); border-top-color: var(--azul); animation: girar 0.8s linear infinite; }
+  @keyframes girar { to { transform: rotate(360deg); } }
+  .maf-barra { height: 6px; margin-top: 12px; border-radius: 999px; background: var(--relleno); overflow: hidden; }
+  .maf-barra i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #0A84FF, #5E5CE6); transition: width 0.5s var(--curva); }
+  .maf-barra.indefinida i { width: 40%; animation: vaiven 1.2s var(--curva) infinite alternate; }
+  @keyframes vaiven { from { transform: translateX(-60%); } to { transform: translateX(210%); } }
+  #mafBox:has(#archivoMaf:disabled) #estadoMaf::after { display: none; }
+  #estadoMaf > .err { display: block; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--rojo) 10%, transparent); }
+
   /* Interruptor de modo oscuro (opcional; por defecto claro) */
   .tema-fila { display: flex; justify-content: space-between; align-items: center; margin: 0 0 16px; padding: 10px 18px; min-height: 50px; box-sizing: border-box;
     background: var(--card); border-radius: 22px; box-shadow: var(--sombra); font-size: 16px; font-weight: 600; cursor: pointer; }
@@ -646,7 +707,7 @@
 <body>
 <div id="app">
 <aside id="lateral">
-<div id="marca"><span class="logo">AF</span><div><b>Activo Fijo</b><span>Movimientos, plaqueo y bajas</span></div></div>
+<div id="marca"><span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/><path d="m7.5 4.27 9 5.15"/></svg></span><div><b>Activo Fijo</b><span>Movimientos, plaqueo y bajas</span></div></div>
 <fieldset id="mafBox">
   <legend>MAF (base de activos)</legend>
   <label id="zonaMaf" class="zona" title="Arrastre aquí el archivo MAF o haga clic para elegirlo">
@@ -2109,21 +2170,51 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
     $('modulos').classList.toggle('oculto', !m);       // sin MAF no hay nada que capturar
     // Con MAF cargado la zona para arrastrar se hace compacta ("Arrastre otro MAF"); sin MAF es grande
     $('zonaMaf').classList.toggle('compacta', !!m);
-    $('zonaMaf').querySelector('.zona-t1').textContent = m ? 'Arrastre aquí otro MAF' : 'Arrastre aquí el MAF';
+    $('zonaMaf').querySelector('.zona-t1').textContent = m ? 'Cambiar MAF' : 'Arrastre aquí el MAF';
+    $('zonaMaf').querySelector('.zona-t2').textContent = m ? 'arrástrelo aquí o haga clic' : 'o haga clic para elegir el Excel';
     $('sinMaf').classList.toggle('oculto', !!m);
     if (!m) { $('estadoMaf').innerHTML = ''; return; }
-    // Tarjeta mínima: solo la zona para arrastrar y una línea con lo esencial del MAF
-    $('estadoMaf').innerHTML = '<div class="maf-linea"><span class="maf-ok" title="' + esc(m.archivo || '') + '">MAF listo</span>' +
-      '<span class="maf-dato"><b>' + m.total.toLocaleString() + '</b> activos</span>' +
-      '<span class="maf-dato warn"><b>' + m.sinPlaca.toLocaleString() + '</b> sin placa</span>' +
-      (m.placasDuplicadas.length ? '<span class="maf-dato err" title="Placas duplicadas en el MAF: ' + esc(m.placasDuplicadas.join(', ')) + '"><b>' + m.placasDuplicadas.length + '</b> duplicadas</span>' : '') +
-      '</div><div class="muted maf-corte" title="' + esc(m.archivo || '') + '">' + esc(m.archivo || '') + ' · corte ' + esc(m.fecha || 's/f') + '</div>';
+    // Tarjeta del MAF cargado: el archivo como documento, tres indicadores y qué tan reciente es el corte
+    var nombre = String(m.archivo || 'MAF').replace(/\.(xlsx|xls|xlsb|csv)$/i, '');
+    var partes = String(m.fecha || '').split(' '), edad = edadCorte(m.fecha);
+    var dup = m.placasDuplicadas.length;
+    $('estadoMaf').innerHTML =
+      '<div class="maf-doc" title="' + esc((m.archivo || '') + (m.fecha ? ' · corte ' + m.fecha : '')) + '">' +
+        '<span class="maf-xls" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h8"/><path d="M12 11v8"/></svg></span>' +
+        '<span class="maf-doc-txt"><b>' + esc(nombre) + '</b><span>' + (m.fecha ? 'Corte del ' + esc(partes[0]) : 'Sin fecha de corte') + '</span></span>' +
+        '<span class="maf-listo">Listo</span>' +
+      '</div>' +
+      '<div class="maf-kpis">' +
+        '<div><b>' + m.total.toLocaleString() + '</b><span>activos</span></div>' +
+        '<div class="' + (m.sinPlaca ? 'warn' : '') + '"><b>' + m.sinPlaca.toLocaleString() + '</b><span>sin placa</span></div>' +
+        '<div class="' + (dup ? 'err' : 'ok') + '"' + (dup ? ' title="Placas duplicadas en el MAF: ' + esc(m.placasDuplicadas.join(', ')) + '"' : '') + '><b>' + dup + '</b><span>' + (dup === 1 ? 'duplicada' : 'duplicadas') + '</span></div>' +
+      '</div>' +
+      '<div class="maf-corte">' + (edad ? '<span class="maf-edad ' + edad.cls + '" title="' + esc(edad.titulo) + '">' + esc(edad.txt) + '</span>' : '') + '</div>';
+  }
+
+  // Antigüedad del corte del MAF ("02/11/2026 12:42 PM" -> hace 21 días): verde hasta un mes, naranja hasta dos, rojo después
+  function edadCorte(fecha) {
+    var p = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(String(fecha || ''));
+    if (!p) return null;
+    var corte = new Date(+p[3], +p[2] - 1, +p[1]), hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    var dias = Math.round((hoy - corte) / 86400000);
+    if (dias < 0 || dias > 3650) return null;
+    var txt = dias === 0 ? 'Corte de hoy' : dias === 1 ? 'Corte de ayer' : 'Corte de hace ' + dias + ' días';
+    var cls = dias <= 31 ? 'fresco' : dias <= 62 ? 'medio' : 'viejo';
+    return { txt: txt, cls: cls, titulo: cls === 'fresco' ? 'MAF al día' : 'Conviene cargar un MAF más reciente: lo que AF aplicó después del corte no aparece.' };
+  }
+
+  // Mientras se lee o se recupera el MAF: etapa, archivo y una barra de avance estimada
+  function pintarCargandoMaf(titulo, detalle, pct) {
+    $('estadoMaf').innerHTML = '<div class="maf-cargando"><span class="maf-giro" aria-hidden="true"></span><span class="maf-doc-txt"><b>' + esc(titulo) + '</b><span>' + esc(detalle) + '</span></span></div>' +
+      '<div class="maf-barra' + (pct == null ? ' indefinida' : '') + '"><i' + (pct == null ? '' : ' style="width:' + Math.max(4, Math.min(96, pct)).toFixed(0) + '%"') + '></i></div>';
   }
 
   // Dato chico del MAF (cuánto tardó, si se recuperó) junto a la fecha de corte, no suelto debajo de los indicadores
   function notaMaf(texto) {
     var c = $('estadoMaf').querySelector('.maf-corte');
-    if (c) c.insertAdjacentHTML('beforeend', ' · ' + esc(texto));
+    if (c) c.insertAdjacentHTML('beforeend', '<span class="maf-nota">' + esc(texto) + '</span>');
     else $('estadoMaf').insertAdjacentHTML('beforeend', ' <span class="muted">(' + esc(texto) + ')</span>');
   }
 
@@ -2223,7 +2314,9 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
     if (!f) return;
     var t0 = Date.now(), etapa = 'Leyendo el archivo';
     function pintar() {
-      $('estadoMaf').textContent = etapa + ' ' + f.name + '… ' + Math.round((Date.now() - t0) / 1000) + ' s (el MAF completo tarda unos 10-20 s)';
+      var s = (Date.now() - t0) / 1000;
+      // El MAF completo tarda unos 10-20 s: la barra avanza rápido al principio y se frena cerca del final
+      pintarCargandoMaf(etapa + '…', Math.round(s) + ' s de unos 15 · ' + f.name, 100 * (1 - Math.exp(-s / 9)));
     }
     pintar();
     var reloj = setInterval(pintar, 500);
@@ -3020,10 +3113,10 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
     iniciarAuto();
     pintarNav();
     $('mod-' + App.moduloActual).classList.remove('oculto');
-    $('estadoMaf').textContent = 'Buscando el último MAF cargado…';
+    pintarCargandoMaf('Buscando el último MAF…', 'Guardado en este navegador', null);
     idb('readonly', function (s) { return s.get('actual'); }).then(function (c) {
       if (c && c.registros && !App.maf) {
-        $('estadoMaf').textContent = 'Recuperando el último MAF cargado (' + c.registros.length.toLocaleString() + ' activos)…';
+        pintarCargandoMaf('Recuperando el último MAF…', (c.archivo || 'MAF') + ' · ' + c.registros.length.toLocaleString() + ' activos', null);
         setTimeout(function () {
           usarMaf(AF.indexarMAF(c));
           notaMaf('recuperado de la última carga');

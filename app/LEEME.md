@@ -14,7 +14,12 @@ Arriba hay cinco pestañas en la misma página; al hacer clic el módulo entra d
 | Consultar el MAF | Buscar cualquier activo y ver todas las columnas del MAF: año, costo, depreciación y si tiene valor (solo consulta) | Excel de resultados |
 
 ## Uso
-1. **MAF**: arrastrar el Excel del MAF a la zona "Arrastre aquí el MAF" o a cualquier parte de la ventana (o hacer clic en la zona para elegirlo); cualquier versión (.xlsx). Tarda 10-20 s en segundo plano; luego se recupera solo. Hasta tener MAF no se muestran los apartados. Cada apartado dice en una línea para qué sirve y, al capturar, en "Ahora:" qué sigue. El número junto a una pestaña son los movimientos capturados sin terminar.
+1. **MAF**: arrastrar el Excel del MAF a la zona "Arrastre aquí el MAF" o a cualquier parte de la ventana (o hacer clic en la zona para elegirlo); cualquier versión (.xlsx). Tarda 10-20 s en segundo plano, con barra de avance; luego se recupera solo. Ya cargado, la tarjeta muestra:
+   - el archivo y su fecha de corte;
+   - activos, sin placa y duplicadas (al pasar el mouse sobre duplicadas salen las placas);
+   - qué tan reciente es el corte: verde hasta un mes, naranja hasta dos y rojo después, para saber cuándo conviene descargar otro MAF;
+   - abajo, *Cambiar MAF*, para arrastrar o elegir otro.
+   Hasta tener MAF no se muestran los apartados. Cada apartado dice en una línea para qué sirve y, al capturar, en "Ahora:" qué sigue. El número junto a una pestaña son los movimientos capturados sin terminar.
 2. **Altas, bajas y transferencias**: elegir Alta, Baja o Transferencia; capturar CR o tienda (o dejarlo vacío y se llena con la placa); llenar lo que pida (tipo de baja o tienda destino) y escribir/escanear la placa. Muestra lo que se escribirá; se agrega con **✓**. Enter/escáner solo busca.
    - Alta: casa con el activo pendiente de placa de la tienda (por serie o eligiendo). Si el equipo está cargado en otra tienda, genera alta + transferencia. **Cotejar** muestra lo que dice el MAF de cada tienda.
    - Baja: elegir el **tipo de baja** (los 10 del formato oficial). La tienda se toma de cada placa (se pueden mezclar tiendas en un formato); el CR capturado solo sirve para la baja masiva.
