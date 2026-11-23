@@ -11,6 +11,7 @@ Arriba hay cinco pestañas en la misma página; al hacer clic el módulo entra d
 | Bajas Anexo 3 | Desincorporación oficial; lista pegada; baja masiva | Formato de Movimientos AF (Anexo 3), 50 por archivo (se parte solo) |
 | Levantamiento de tienda | Elegir la tienda y poner placa a sus activos (alta con serie, marca y modelo); opcional: revisar todo contra el MAF | V.2, pestaña Alta de código (para subir a List) + Excel de la revisión |
 | Consultas y seguimiento | Activos de una tienda, pendientes de plaqueo, seguimiento de lo enviado | Excel de consulta |
+| Consultar el MAF | Buscar cualquier activo y ver todas las columnas del MAF: año, costo, depreciación y si tiene valor (solo consulta) | Excel de resultados |
 
 ## Uso
 1. **MAF**: arrastrar el Excel del MAF a la zona "Arrastre aquí el MAF" o a cualquier parte de la ventana (o hacer clic en la zona para elegirlo); cualquier versión (.xlsx). Tarda 10-20 s en segundo plano; luego se recupera solo. Hasta tener MAF no se muestran los apartados. Cada apartado dice en una línea para qué sirve y, al capturar, en "Ahora:" qué sigue. El número junto a una pestaña son los movimientos capturados sin terminar.
@@ -33,6 +34,14 @@ Arriba hay cinco pestañas en la misma página; al hacer clic el módulo entra d
    - *Consulta de tienda*: todos los activos del CR con su estado, filtro, exportar o imprimir.
    - *Pendientes de plaqueo*: por tienda o por factura, con detalle y exportación.
    - *Seguimiento*: todo Excel generado queda registrado; al cargar un MAF más nuevo dice si cada movimiento ya se aplicó, sigue pendiente o se aplicó distinto. *Quitar los aplicados* limpia la lista.
+9. **Consultar el MAF** (solo consulta, no modifica nada):
+   - Un buscador para placa, No. Activo, serie, CR, tienda o artículo. Se pueden combinar palabras ("impresora 36UCC", "laptop tijuana este"); no importan acentos ni espacios ("laptop" encuentra "LAP TOP").
+   - Filtros: *Todos / Con valor / Depreciados* y año de adquisición. Los indicadores suman resultados, con valor, depreciados, valor neto y costo.
+   - La tabla muestra todas las columnas del MAF, en su orden, más la columna *Valor*. Se ven 200 renglones; *Exportar resultados a Excel* saca todos.
+   - Al tocar un renglón (o si sale un solo resultado) aparece la ficha del activo: fecha de adquisición y antigüedad, costo, depreciación acumulada (% del costo), valor neto, una barra de depreciación y todas las columnas agrupadas.
+   - Con el escáner se lee la placa y sale su ficha, con el aviso grande de abajo.
+   - **Depreciado** = la columna "Remantente" (meses de vida útil que le quedan) está en 0. Puede conservar un valor neto pequeño, que es el valor de rescate. Si el MAF no trae esa columna, se usa el valor neto.
+   - Si el MAF guardado en el navegador se cargó antes de esta versión, sale un aviso para volver a cargarlo y ver todas las columnas.
 
 ## Escáner (pistola USB, p. ej. Zebra)
 - **Serie distinta:** en altas (Altas, Plaqueo y Levantamiento), si la serie escaneada o escrita no coincide con la que el MAF tiene para ese activo, sale un aviso naranja con las dos series. No bloquea: verifique que sea el mismo equipo.

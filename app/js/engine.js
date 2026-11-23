@@ -60,8 +60,23 @@
     modelo: 'modelo',
     serie: 'serie',
     factura: 'factura',
-    valorNeto: 'valor neto'
+    valorNeto: 'valor neto',
+    // Solo para consulta (pestaña "Consultar el MAF"); opcionales
+    noLegacy: 'no legacy',
+    cuenta: 'cuenta',
+    subcuenta: 'subcuenta',
+    familia: 'familia',
+    cveActivo: 'cve activo',
+    costo: 'costo',
+    deprnAcum: 'deprn acum',
+    deprnAnual: 'deprn anual',
+    vidaUtil: 'vida util',
+    remanente: 'remantente',   // así viene escrito en el MAF; también se acepta "remanente"
+    departamento: 'departamento e',
+    descPuesto: 'desc puesto'
   };
+  // Encabezados alternos de una misma columna
+  var ALTERNAS = { remanente: ['remanente'], departamento: ['departamento'] };
   var OBLIGATORIAS = ['cr', 'crDesc', 'placa', 'plaqueable', 'noActivo', 'descripcion', 'marca', 'modelo', 'serie'];
 
   // ---------- Normalización ----------
@@ -134,6 +149,7 @@
     var pos = {};
     Object.keys(COLUMNAS).forEach(function (k) {
       pos[k] = mejor.norm.indexOf(COLUMNAS[k]);
+      (ALTERNAS[k] || []).forEach(function (a) { if (pos[k] < 0) pos[k] = mejor.norm.indexOf(a); });
     });
     var faltan = OBLIGATORIAS.filter(function (k) { return pos[k] < 0; });
     if (faltan.length) {

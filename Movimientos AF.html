@@ -150,7 +150,7 @@
   /* Íconos de módulo: insignia cuadrada redondeada con color propio */
   .ico { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 8px; display: inline-grid; place-items: center; color: #fff; background: var(--c, var(--azul)); }
   .ico svg { width: 18px; height: 18px; }
-  .m-movimientos { --c: #007AFF; } .m-plaqueo { --c: #FF9500; } .m-anexo3 { --c: #FF3B30; } .m-levantamiento { --c: #5856D6; } .m-consultas { --c: #32ADE6; }
+  .m-movimientos { --c: #007AFF; } .m-plaqueo { --c: #FF9500; } .m-anexo3 { --c: #FF3B30; } .m-levantamiento { --c: #5856D6; } .m-consultas { --c: #32ADE6; } .m-maf { --c: #34C759; }
 
   /* Navegación: en angosto, fichas que se desplazan de lado y se quedan arriba */
   #nav { position: sticky; top: 0; z-index: 6; display: flex; gap: 6px; margin: 0 -16px; padding: 10px 16px; overflow-x: auto; scrollbar-width: none;
@@ -486,7 +486,7 @@
   /* Teléfono: barra de pestañas abajo (como en iPhone) y formularios a lo ancho */
   @media (max-width: 599px) {
     #app { padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
-    #nav { position: fixed; top: auto; bottom: 0; left: 0; right: 0; margin: 0; z-index: 20; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0;
+    #nav { position: fixed; top: auto; bottom: 0; left: 0; right: 0; margin: 0; z-index: 20; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0;
       padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); overflow: visible; border-bottom: 0; border-top: 1px solid var(--sep); }
     #nav a { flex-direction: column; justify-content: center; gap: 2px; padding: 4px 0; background: transparent; border-radius: 12px; font-size: 10.5px; color: var(--muted); }
     #nav a .ico { display: inline-grid; width: 30px; height: 26px; background: transparent; color: var(--muted); }
@@ -520,6 +520,40 @@
     box-shadow: var(--sombra), inset 4px 0 0 var(--naranja); animation: aparecer 0.35s var(--curva); }
   #avisoRespaldo.oculto { display: none; }
   #avisoRespaldo span { flex: 1 1 260px; }
+
+  /* Consultar el MAF: buscador grande, pastillas de valor, tabla con todas las columnas y ficha */
+  .buscador { display: flex; align-items: center; gap: 10px; min-height: 50px; padding: 0 14px; margin: 0 0 12px; border-radius: 14px; background: var(--relleno);
+    transition: box-shadow 0.25s var(--curva); }
+  .buscador:focus-within { box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.25); }
+  .buscador svg { flex: none; width: 20px; height: 20px; color: var(--muted); }
+  .buscador input { flex: 1; min-width: 0; border: 0; background: transparent; font-size: 17px; min-height: 48px; padding: 0; box-shadow: none; outline: none; }
+  .filtros-maf { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; }
+  .filtros-maf .opciones { margin-bottom: 8px; }
+  .valor-p { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .valor-p.con { background: rgba(52, 199, 89, 0.16); color: var(--ok); }
+  .valor-p.dep { background: rgba(142, 142, 147, 0.18); color: var(--muted); }
+  .valor-p.sin { background: var(--relleno); color: var(--muted); font-weight: 500; }
+  .maf-tabla th, .maf-tabla td { white-space: nowrap; }
+  .maf-tabla .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .maf-tabla tr.clic { cursor: pointer; }
+  .maf-tabla tr.clic:hover > td { background: var(--relleno); }
+  .maf-tabla tr.clic.actual > td { background: var(--sel); }
+  .vacio-maf { white-space: normal !important; text-align: center; color: var(--muted); padding: 28px 16px !important; }
+  #mod-maf fieldset { min-width: 0; }   /* la tabla ancha se desplaza dentro de su recuadro, no empuja la página */
+  #mod-maf legend + * { clear: both; }  /* lo que va bajo el título no se encima con él */
+  .ficha-maf-cab { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; clear: both; }
+  .ficha-maf-cab > div:first-child { flex: 1; min-width: 0; }
+  .ficha-maf-t { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+  .ficha-maf-cab .valor-p { font-size: 14px; padding: 4px 12px; }
+  .ficha-maf-valor { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 14px 0 10px; }
+  .ficha-maf-valor > div { background: var(--anidado); border-radius: 16px; padding: 10px 14px; }
+  .ficha-maf-valor span { display: block; font-size: 12px; color: var(--muted); }
+  .ficha-maf-valor b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .ficha-maf-valor small { font-size: 12px; color: var(--muted); }
+  .dep-barra { height: 8px; border-radius: 999px; background: rgba(52, 199, 89, 0.25); overflow: hidden; }
+  .dep-barra i { display: block; height: 100%; border-radius: 999px; background: var(--muted); transition: width 0.5s var(--curva); }
+  .dep-txt { margin: 6px 0 4px; }
+  #mod-maf [data-c="fichaBox"] { animation: aparecer 0.3s var(--curva); }
 
   /* Hoja impresa del levantamiento (solo existe al imprimir; papel blanco, tinta negra) */
   #impresion { display: none; }
@@ -614,6 +648,7 @@
 <div id="mod-anexo3" class="oculto"></div>
 <div id="mod-levantamiento" class="oculto"></div>
 <div id="mod-consultas" class="oculto"></div>
+<div id="mod-maf" class="oculto"></div>
 </div>
 
 <div id="lectura"><span id="lecturaIco" aria-hidden="true"></span><span id="lecturaTexto"></span><button id="lecturaDeshacer" class="oculto">Deshacer</button></div>
@@ -729,8 +764,23 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
     modelo: 'modelo',
     serie: 'serie',
     factura: 'factura',
-    valorNeto: 'valor neto'
+    valorNeto: 'valor neto',
+    // Solo para consulta (pestaña "Consultar el MAF"); opcionales
+    noLegacy: 'no legacy',
+    cuenta: 'cuenta',
+    subcuenta: 'subcuenta',
+    familia: 'familia',
+    cveActivo: 'cve activo',
+    costo: 'costo',
+    deprnAcum: 'deprn acum',
+    deprnAnual: 'deprn anual',
+    vidaUtil: 'vida util',
+    remanente: 'remantente',   // así viene escrito en el MAF; también se acepta "remanente"
+    departamento: 'departamento e',
+    descPuesto: 'desc puesto'
   };
+  // Encabezados alternos de una misma columna
+  var ALTERNAS = { remanente: ['remanente'], departamento: ['departamento'] };
   var OBLIGATORIAS = ['cr', 'crDesc', 'placa', 'plaqueable', 'noActivo', 'descripcion', 'marca', 'modelo', 'serie'];
 
   // ---------- Normalización ----------
@@ -803,6 +853,7 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
     var pos = {};
     Object.keys(COLUMNAS).forEach(function (k) {
       pos[k] = mejor.norm.indexOf(COLUMNAS[k]);
+      (ALTERNAS[k] || []).forEach(function (a) { if (pos[k] < 0) pos[k] = mejor.norm.indexOf(a); });
     });
     var faltan = OBLIGATORIAS.filter(function (k) { return pos[k] < 0; });
     if (faltan.length) {
@@ -1880,7 +1931,7 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
   var LS_ENV = 'af_enviados';
   // Módulos con captura propia (cuentan como memoria compartida) y módulos de navegación
   var MODULOS = ['movimientos', 'plaqueo', 'anexo3', 'levantamiento'];
-  var NAV = ['movimientos', 'plaqueo', 'anexo3', 'levantamiento', 'consultas'];
+  var NAV = ['movimientos', 'plaqueo', 'anexo3', 'levantamiento', 'consultas', 'maf'];
 
   var App = {
     maf: null,
@@ -2539,22 +2590,24 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
 
   // ---------- Módulos (una sola página; al cambiar de pestaña el módulo entra deslizándose) ----------
   var NOMBRES = { movimientos: 'Altas, bajas y transferencias', plaqueo: 'Plaqueo por factura', anexo3: 'Bajas Anexo 3 (desincorporación)',
-    levantamiento: 'Levantamiento de tienda', consultas: 'Consultas y seguimiento' };
+    levantamiento: 'Levantamiento de tienda', consultas: 'Consultas y seguimiento', maf: 'Consultar el MAF' };
   var AYUDA = {
     movimientos: 'Un equipo a la vez: poner placa (alta), dar de baja o transferir a otra tienda. Llena el Formato V.2.',
     plaqueo: 'Equipo nuevo de una factura que ya está en el MAF sin placa: escanee las placas una tras otra. Llena el alta del Formato V.2.',
     anexo3: 'Bajas con desincorporación oficial. Llena el Anexo 3 (50 equipos por archivo; si son más, se parte solo).',
     levantamiento: 'Escanee todo lo que hay en una tienda y compárelo con el MAF: qué falta, qué sobra y qué está en otra tienda.',
-    consultas: 'Ver los activos de una tienda, los pendientes de plaqueo y si AF ya aplicó lo que se envió. Aquí no se captura nada.'
+    consultas: 'Ver los activos de una tienda, los pendientes de plaqueo y si AF ya aplicó lo que se envió. Aquí no se captura nada.',
+    maf: 'Busque por placa, No. Activo, serie, tienda o artículo y vea todas las columnas del MAF: año de adquisición, costo, depreciación y si aún tiene valor. Solo consulta: aquí no se cambia nada.'
   };
-  var CORTOS = { movimientos: 'Movimientos', plaqueo: 'Plaqueo', anexo3: 'Anexo 3', levantamiento: 'Levantamiento', consultas: 'Consultas' };
+  var CORTOS = { movimientos: 'Movimientos', plaqueo: 'Plaqueo', anexo3: 'Anexo 3', levantamiento: 'Levantamiento', consultas: 'Consultas', maf: 'MAF' };
   // Guía de cada módulo (didáctica): los pasos en el orden en que se trabaja
   var PASOS = {
     movimientos: ['Elige Alta, Baja o Transferencia', 'Escanea la placa', 'Revisa la ficha y presiona ✓', 'Descarga el Excel'],
     plaqueo: ['Captura la factura', 'Escanea cada placa', 'Corrige serie, marca o modelo si hace falta', 'Descarga el Excel'],
     anexo3: ['Llena los datos de la baja', 'Escanea las placas', 'Revisa y presiona ✓', 'Descarga el Anexo 3'],
     levantamiento: ['Elige la tienda', 'Escanea la placa del activo', 'Revisa serie, marca y modelo', 'Descarga el formato de alta'],
-    consultas: ['Elige qué consultar', 'Toca un indicador para filtrar', 'Exporta o imprime']
+    consultas: ['Elige qué consultar', 'Toca un indicador para filtrar', 'Exporta o imprime'],
+    maf: ['Escribe o escanea lo que buscas', 'Filtra por valor o año', 'Toca un renglón para ver su ficha', 'Exporta si lo necesitas']
   };
   App.moduloActual = (location.hash || '').replace('#', '') || 'movimientos';
   if (NAV.indexOf(App.moduloActual) < 0) App.moduloActual = 'movimientos';
@@ -2565,7 +2618,8 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
     plaqueo: '<path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r="1"/>',
     anexo3: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/>',
     levantamiento: '<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M8 7v10"/><path d="M12 7v10"/><path d="M16 7v10"/>',
-    consultas: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>'
+    consultas: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+    maf: '<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5"/><path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3"/>'
   };
   function icono(m) {
     return '<span class="ico m-' + m + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONOS[m] + '</svg></span>';
@@ -4704,8 +4758,298 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
 })();
 
 </script>
+<script data-src="js/mod-maf.js">
+/*
+ * Consultar el MAF (solo lectura).
+ * Buscar por placa, No. Activo, serie, CR, tienda o artículo y ver todas las columnas del MAF,
+ * con el año de adquisición y si el activo ya está depreciado o todavía tiene valor.
+ * Aquí no se captura ni se modifica nada.
+ */
+(function () {
+  'use strict';
+  var App = window.AFApp, esc = App.esc;
+  var MODULO = 'maf';
+  var MAX_FILAS = 200;
+
+  // Columnas en el orden del MAF (encabezado tal como viene en el archivo)
+  var COLS = [
+    ['plazaDesc', 'Plaza Desc'], ['plaza', 'Plaza'], ['distrito', 'Distrito'], ['cr', 'Cr'], ['crDesc', 'Cr Desc'],
+    ['placa', 'Codigo Barras'], ['plaqueable', 'Plaqueable'], ['noActivo', 'No Activo'], ['noLegacy', 'No Legacy'],
+    ['cuenta', 'Cuenta'], ['subcuenta', 'Subcuenta'], ['familia', 'Familia'], ['cveActivo', 'Cve Activo'],
+    ['mesAdq', 'Mes Adq'], ['anioAdq', 'Anio Adq'], ['descAdic', 'Desc Adicional'], ['factura', 'Factura'],
+    ['costo', 'Costo', 'dinero'], ['deprnAcum', 'Deprn Acum', 'dinero'], ['deprnAnual', 'Deprn Anual', 'dinero'], ['valorNeto', 'Valor Neto', 'dinero'],
+    ['vidaUtil', 'Vida Util', 'num'], ['remanente', 'Remantente', 'num'], ['origen', 'Origen'], ['descripcion', 'Descripcion'],
+    ['departamento', 'Departamento E'], ['marca', 'Marca'], ['modelo', 'Modelo'], ['serie', 'Serie'], ['descPuesto', 'Desc Puesto']
+  ];
+  var ETIQ = {};
+  COLS.forEach(function (c) { ETIQ[c[0]] = c[1]; });
+  var GRUPOS = [
+    ['Ubicación', ['plazaDesc', 'plaza', 'distrito', 'cr', 'crDesc']],
+    ['Equipo', ['descripcion', 'descAdic', 'marca', 'modelo', 'serie', 'departamento', 'descPuesto']],
+    ['Identificación', ['placa', 'plaqueable', 'noActivo', 'noLegacy', 'cveActivo', 'cuenta', 'subcuenta', 'familia', 'origen']],
+    ['Adquisición y valor', ['mesAdq', 'anioAdq', 'factura', 'costo', 'deprnAcum', 'deprnAnual', 'valorNeto', 'vidaUtil', 'remanente']]
+  ];
+
+  var fmtDinero = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  var fmtEntero = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 });
+  function num(v) {
+    if (v === '' || v === null || v === undefined) return null;
+    var n = parseFloat(String(v).replace(/[$,\s]/g, ''));
+    return isFinite(n) ? n : null;
+  }
+  function dinero(v) { var n = num(v); return n === null ? '' : fmtDinero.format(n); }
+
+  // ¿Depreciado o con valor? Manda "Remantente" (meses de vida útil que le quedan); sin ese dato, el valor neto
+  function infoValor(r) {
+    var costo = num(r.costo), neto = num(r.valorNeto), acum = num(r.deprnAcum), rem = num(r.remanente), vida = num(r.vidaUtil);
+    var dep = null;
+    if (rem !== null) dep = rem <= 0;
+    else if (neto !== null) dep = neto <= 0 || (costo > 0 && neto <= costo * 0.05 + 0.01);
+    var pct = null;
+    if (costo > 0 && acum !== null) pct = acum * 100 / costo;
+    else if (costo > 0 && neto !== null) pct = (1 - neto / costo) * 100;
+    if (pct !== null) pct = Math.max(0, Math.min(100, pct));
+    return { dep: dep, costo: costo, neto: neto, acum: acum, rem: rem, vida: vida, pct: pct };
+  }
+  function pastilla(v) {
+    return v.dep === null ? '<span class="valor-p sin">Sin dato</span>'
+      : v.dep ? '<span class="valor-p dep">Depreciado</span>' : '<span class="valor-p con">Con valor</span>';
+  }
+
+  window.AFMaf = function () {
+    var cont = document.getElementById('mod-' + MODULO);
+    var claves = null;          // texto de búsqueda por registro (se arma la primera vez que se busca)
+    var resultados = [];        // registros que cumplen búsqueda y filtros
+    var info = new Map();       // registro -> infoValor (cache)
+    var filtroValor = '';       // '' | 'con' | 'dep'
+    var sel = null;             // registro con la ficha abierta
+    var completo = true;        // ¿el MAF guardado trae todas las columnas?
+
+    cont.innerHTML =
+      '<fieldset><legend>1. Buscar en el MAF</legend>' +
+      '<div class="buscador"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>' +
+      '<input data-c="q" type="search" autocomplete="off" spellcheck="false" placeholder="Placa, No. Activo, serie, CR, tienda o artículo (ej. laptop tijuana este)"></div>' +
+      '<div class="filtros-maf"><div class="opciones" data-c="valor">' +
+        '<button data-valor="" class="activo">Todos</button><button data-valor="con">Con valor</button><button data-valor="dep">Depreciados</button></div>' +
+      '<label>Año de adquisición <select data-c="anio"><option value="">Todos</option></select></label></div>' +
+      '<div class="muted">Solo consulta: aquí no se cambia nada. Con el escáner, lea la placa y sale su ficha.</div>' +
+      '<div data-c="aviso"></div>' +
+      '<div data-c="stats"></div></fieldset>' +
+      '<fieldset data-c="fichaBox" class="oculto"><legend>Ficha del activo</legend><div data-c="ficha"></div></fieldset>' +
+      '<fieldset><legend>2. Resultados (<span data-c="n">0</span>)</legend>' +
+      '<div class="botones"><button data-accion="exportar">Exportar resultados a Excel</button></div>' +
+      '<div data-c="nota" class="muted"></div>' +
+      '<div class="scroll maf-tabla"><table data-c="tabla"></table></div></fieldset>';
+
+    var q = function (n) { return cont.querySelector('[data-c="' + n + '"]'); };
+    var val = function (n) { var e = q(n); return e ? e.value : ''; };
+
+    App.registrarContexto(MODULO, function () {
+      var t = val('q').trim();
+      return ['Consulta del MAF', t ? '“' + t + '”' : 'sin búsqueda', App.cuenta(resultados.length, 'resultado', 'resultados')].join(' · ');
+    });
+
+    function valorDe(r) { var v = info.get(r); if (!v) { v = infoValor(r); info.set(r, v); } return v; }
+    // Texto de búsqueda de un registro: cada dato sin espacios ni acentos ("LAP TOP" -> "laptop"),
+    // separado por | para que una palabra no junte dos datos
+    function claveDe(r) {
+      return [r.placa, r.noActivo, r.serie, r.cr, r.crDesc, r.plazaDesc, r.plaza, r.distrito, r.descripcion, r.descAdic,
+        r.marca, r.modelo, r.factura, r.cveActivo, r.noLegacy, r.departamento, r.descPuesto].join('|')
+        .toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9|]/g, '');
+    }
+    var armadas = 0, trozo = 0;
+    function armarClaves(hasta) {
+      var regs = App.maf.registros, fin = Math.min(regs.length, hasta || regs.length);
+      if (!claves) claves = new Array(regs.length);
+      for (; armadas < fin; armadas++) claves[armadas] = claveDe(regs[armadas]);
+    }
+    // Se arma en segundo plano, de a poco, para que la primera búsqueda sea inmediata sin congelar la página
+    function armarEnFondo() {
+      clearTimeout(trozo);
+      if (!App.maf || armadas >= App.maf.registros.length) return;
+      armarClaves(armadas + 8000);
+      trozo = setTimeout(armarEnFondo, 30);
+    }
+
+    // Una sola palabra que es placa, No. Activo, serie o CR exactos: esos activos. Si no, todas las palabras deben aparecer.
+    function buscar(texto) {
+      var regs = App.maf.registros, t = AF.util.texto(texto);
+      if (!t) return regs;
+      if (!/\s/.test(t)) {
+        var idx = App.maf.idx, vistos = new Set(), exactos = [];
+        [idx.porPlaca.get(AF.util.llavePlaca(t)), idx.porActivo.get(t) ? [idx.porActivo.get(t)] : null,
+          idx.porSerie.get(AF.util.llaveSerie(t)), idx.porCr.get(t.toUpperCase())].forEach(function (l) {
+          (l || []).forEach(function (r) { if (!vistos.has(r)) { vistos.add(r); exactos.push(r); } });
+        });
+        if (exactos.length) return exactos;
+      }
+      armarClaves();
+      var tokens = AF.util.llaveTexto(t).split(' ').filter(Boolean);
+      if (!tokens.length) return [];
+      var out = [];
+      for (var i = 0; i < regs.length; i++) {
+        var k = claves[i], ok = true;
+        for (var j = 0; j < tokens.length; j++) if (k.indexOf(tokens[j]) < 0) { ok = false; break; }
+        if (ok) out.push(regs[i]);
+      }
+      return out;
+    }
+
+    function hayBusqueda() { return !!(val('q').trim() || filtroValor || val('anio')); }
+
+    function actualizar(desdeEscaner) {
+      if (!App.maf) return;
+      var base = hayBusqueda() ? buscar(val('q')) : [];
+      var anio = val('anio');
+      resultados = base.filter(function (r) {
+        if (anio && String(r.anioAdq) !== anio) return false;
+        if (filtroValor) { var d = valorDe(r).dep; if (filtroValor === 'dep' ? d !== true : d !== false) return false; }
+        return true;
+      });
+      if (sel && resultados.indexOf(sel) < 0) sel = null;
+      if (!sel && resultados.length === 1) sel = resultados[0];
+      pintar();
+      if (desdeEscaner) {
+        var p = val('q').trim();
+        if (resultados.length === 1) {
+          var r = resultados[0], v = valorDe(r);
+          App.lectura('ok', p + ': ' + r.descripcion + ' — ' + r.cr + ' ' + r.crDesc + ' — ' + (v.dep === null ? 'sin dato de valor' : v.dep ? 'depreciado' : 'con valor ' + dinero(r.valorNeto)));
+        } else if (!resultados.length) App.lectura('error', p + ': no está en el MAF.');
+        else App.lectura('aviso', p + ': ' + resultados.length + ' activos en el MAF con ese dato. Elija uno en la lista.');
+      }
+    }
+
+    function pintar() {
+      var todos = !hayBusqueda();
+      var lista = todos ? App.maf.registros : resultados;
+      // Indicadores: de los resultados, o de todo el MAF si aún no se busca nada
+      var nCon = 0, nDep = 0, neto = 0, costo = 0;
+      if (!todos || lista.length) {
+        lista.forEach(function (r) {
+          var v = valorDe(r);
+          if (v.dep === true) nDep++; else if (v.dep === false) nCon++;
+          if (v.neto !== null) neto += v.neto;
+          if (v.costo !== null) costo += v.costo;
+        });
+      }
+      q('stats').innerHTML = App.indicadores([
+        { n: lista.length, txt: todos ? 'activos en todo el MAF' : 'resultados' },
+        { n: nCon, txt: 'con valor', cls: 'ok' },
+        { n: nDep, txt: 'depreciados', cls: nDep ? 'warn' : '' },
+        { n: fmtEntero.format(neto), txt: 'valor neto' + (todos ? ' total' : '') },
+        { n: fmtEntero.format(costo), txt: 'costo' + (todos ? ' total' : '') }
+      ]);
+      q('n').textContent = resultados.length.toLocaleString();
+
+      if (todos) {
+        q('nota').textContent = '';
+        q('tabla').innerHTML = '<tr><td class="vacio-maf">Escriba o escanee qué buscar: una placa, un No. Activo, una serie, un CR, el nombre de una tienda o un artículo. Puede combinar palabras, por ejemplo "impresora 36UCC".</td></tr>';
+      } else if (!resultados.length) {
+        q('nota').textContent = '';
+        q('tabla').innerHTML = '<tr><td class="vacio-maf">No hay activos en el MAF con esa búsqueda.</td></tr>';
+      } else {
+        var ver = resultados.slice(0, MAX_FILAS);
+        q('nota').textContent = resultados.length > MAX_FILAS
+          ? 'Se muestran los primeros ' + MAX_FILAS + ' de ' + resultados.length.toLocaleString() + '. Afine la búsqueda o exporte para verlos todos.' : 'Toque un renglón para ver su ficha.';
+        q('tabla').innerHTML = '<thead><tr><th>Valor</th>' + COLS.map(function (c) { return '<th' + (c[2] ? ' class="num"' : '') + '>' + esc(c[1]) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+          ver.map(function (r, i) {
+            return '<tr class="clic' + (r === sel ? ' actual' : '') + '" data-i="' + i + '"><td>' + pastilla(valorDe(r)) + '</td>' + COLS.map(function (c) {
+              var v = c[2] === 'dinero' ? dinero(r[c[0]]) : r[c[0]];
+              return '<td' + (c[2] ? ' class="num"' : '') + '>' + esc(v == null ? '' : v) + '</td>';
+            }).join('') + '</tr>';
+          }).join('') + '</tbody>';
+      }
+      pintarFicha();
+      App.pintarContexto();
+    }
+
+    function pintarFicha() {
+      var box = q('fichaBox');
+      if (!sel) { box.classList.add('oculto'); q('ficha').innerHTML = ''; return; }
+      box.classList.remove('oculto');
+      var r = sel, v = valorDe(r);
+      var adq = r.mesAdq && r.anioAdq ? String(r.mesAdq).padStart(2, '0') + '/' + r.anioAdq : r.anioAdq || '';
+      var anios = num(r.anioAdq) ? new Date().getFullYear() - num(r.anioAdq) : null;
+      var resumen;
+      if (v.dep === null) resumen = 'El MAF no trae datos de valor para este activo.';
+      else if (v.dep) resumen = 'Ya cumplió su vida útil' + (v.neto ? '; le queda el valor de rescate de ' + dinero(v.neto) : '') + '.';
+      else resumen = 'Valor neto ' + dinero(v.neto) + (v.rem !== null ? '; le quedan ' + App.cuenta(v.rem, 'mes', 'meses') + ' de vida útil' : '') + '.';
+      q('ficha').innerHTML =
+        '<div class="ficha-maf-cab"><div><div class="ficha-maf-t">' + esc(r.descripcion) + (r.descAdic ? ' <span class="muted">' + esc(r.descAdic) + '</span>' : '') + '</div>' +
+          '<div class="muted">Activo <b>' + esc(r.noActivo) + '</b>' + (r.placa ? ' · Placa <b>' + esc(r.placa) + '</b>' : ' · Sin placa') +
+          ' · ' + esc(r.cr + ' ' + r.crDesc) + '</div></div>' + pastilla(v) + '</div>' +
+        '<div class="ficha-maf-valor">' +
+          '<div><span>Adquirido</span><b>' + esc(adq || '—') + '</b>' + (anios !== null ? '<small>' + (anios <= 0 ? 'este año' : 'hace ' + App.cuenta(anios, 'año', 'años')) + '</small>' : '') + '</div>' +
+          '<div><span>Costo</span><b>' + esc(dinero(r.costo) || '—') + '</b></div>' +
+          '<div><span>Depreciación acumulada</span><b>' + esc(dinero(r.deprnAcum) || '—') + '</b>' + (v.pct !== null ? '<small>' + Math.round(v.pct) + '% del costo</small>' : '') + '</div>' +
+          '<div><span>Valor neto</span><b>' + esc(dinero(r.valorNeto) || '—') + '</b></div>' +
+        '</div>' +
+        (v.pct !== null ? '<div class="dep-barra" title="' + Math.round(v.pct) + '% depreciado"><i style="width:' + v.pct.toFixed(1) + '%"></i></div>' : '') +
+        '<div class="muted dep-txt">' + esc(resumen) + (v.vida !== null ? ' Vida útil: ' + App.cuenta(v.vida, 'mes', 'meses') + '.' : '') + '</div>' +
+        GRUPOS.map(function (g) {
+          return '<div class="ficha"><div class="ficha-t">' + esc(g[0]) + '</div><dl class="kv">' + g[1].map(function (k) {
+            var c = COLS.filter(function (x) { return x[0] === k; })[0];
+            var vv = c && c[2] === 'dinero' ? dinero(r[k]) : r[k];
+            return '<div><dt>' + esc(ETIQ[k]) + '</dt><dd>' + esc(vv == null ? '' : vv) + '</dd></div>';
+          }).join('') + '</dl></div>';
+        }).join('');
+    }
+
+    // ---------- Eventos ----------
+    var espera = 0;
+    q('q').addEventListener('input', function () { clearTimeout(espera); espera = setTimeout(function () { sel = null; actualizar(false); }, 180); });
+    q('q').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); clearTimeout(espera); sel = null; actualizar(false); } });
+    q('anio').addEventListener('change', function () { actualizar(false); });
+    cont.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('[data-valor]');
+      if (b) {
+        filtroValor = b.getAttribute('data-valor');
+        q('valor').querySelectorAll('button').forEach(function (x) { x.classList.toggle('activo', x === b); });
+        actualizar(false);
+        return;
+      }
+      if (e.target.closest && e.target.closest('[data-accion="exportar"]')) { exportar(); return; }
+      var tr = e.target.closest && e.target.closest('tr[data-i]');
+      if (tr) {
+        sel = resultados[Number(tr.getAttribute('data-i'))] || null;
+        cont.querySelectorAll('tr.actual').forEach(function (x) { x.classList.remove('actual'); });
+        tr.classList.add('actual');
+        pintarFicha();
+        q('fichaBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    });
+
+    function exportar() {
+      if (!resultados.length) { q('nota').innerHTML = '<span class="err">Primero busque algo: no hay resultados que exportar.</span>'; return; }
+      var filas = resultados.map(function (r) {
+        var v = valorDe(r), o = { Valor: v.dep === null ? 'Sin dato' : v.dep ? 'Depreciado' : 'Con valor' };
+        COLS.forEach(function (c) { var x = r[c[0]]; o[c[1]] = c[2] ? (num(x) === null ? x : num(x)) : x; });
+        return o;
+      });
+      var t = val('q').trim().replace(/[\\/:*?"<>|]/g, ' ').slice(0, 40);
+      App.exportarExcel('Consulta MAF ' + (t || 'filtros') + ' ' + App.hoyLocal() + '.xlsx', { Resultados: filas });
+    }
+
+    App.registrarEscaner(MODULO, { placa: q('q'), alLeer: function () { clearTimeout(espera); sel = null; actualizar(true); } });
+
+    App.alMaf(function (maf) {
+      clearTimeout(trozo);
+      claves = null; armadas = 0; info = new Map(); sel = null;
+      trozo = setTimeout(armarEnFondo, 1500);
+      completo = maf.registros.some(function (r) { return r.costo !== undefined; });
+      q('aviso').innerHTML = completo ? '' : '<div class="warn">El MAF guardado en este navegador se cargó con una versión anterior y no trae todas las columnas (costo, depreciación, vida útil). Vuelva a cargar el archivo del MAF para verlas.</div>';
+      var anios = {};
+      maf.registros.forEach(function (r) { if (r.anioAdq) anios[r.anioAdq] = 1; });
+      q('anio').innerHTML = '<option value="">Todos</option>' + Object.keys(anios).sort(function (a, b) { return b - a; })
+        .map(function (a) { return '<option>' + esc(a) + '</option>'; }).join('');
+      actualizar(false);
+    });
+  };
+})();
+
+</script>
 <script data-src="js/inicio.js">
-/* Arranca todos los módulos en la misma página; comun.js muestra el del hash (#movimientos, #plaqueo, #anexo3, #levantamiento o #consultas). */
+/* Arranca todos los módulos en la misma página; comun.js muestra el del hash (#movimientos, #plaqueo, #anexo3, #levantamiento, #consultas o #maf). */
 (function () {
   'use strict';
   var App = window.AFApp;
@@ -4714,6 +5058,7 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
   window.AFCaptura({ modulo: 'anexo3', formato: 'ANEXO3', tipos: ['BAJA'], nombreArchivo: 'Formato de Movimientos AF (Anexo 3)' });
   window.AFLevantamiento();
   window.AFConsultas();
+  window.AFMaf();
   App.iniciar();
 })();
 

@@ -150,7 +150,7 @@
   /* Íconos de módulo: insignia cuadrada redondeada con color propio */
   .ico { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 8px; display: inline-grid; place-items: center; color: #fff; background: var(--c, var(--azul)); }
   .ico svg { width: 18px; height: 18px; }
-  .m-movimientos { --c: #007AFF; } .m-plaqueo { --c: #FF9500; } .m-anexo3 { --c: #FF3B30; } .m-levantamiento { --c: #5856D6; } .m-consultas { --c: #32ADE6; }
+  .m-movimientos { --c: #007AFF; } .m-plaqueo { --c: #FF9500; } .m-anexo3 { --c: #FF3B30; } .m-levantamiento { --c: #5856D6; } .m-consultas { --c: #32ADE6; } .m-maf { --c: #34C759; }
 
   /* Navegación: en angosto, fichas que se desplazan de lado y se quedan arriba */
   #nav { position: sticky; top: 0; z-index: 6; display: flex; gap: 6px; margin: 0 -16px; padding: 10px 16px; overflow-x: auto; scrollbar-width: none;
@@ -486,7 +486,7 @@
   /* Teléfono: barra de pestañas abajo (como en iPhone) y formularios a lo ancho */
   @media (max-width: 599px) {
     #app { padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
-    #nav { position: fixed; top: auto; bottom: 0; left: 0; right: 0; margin: 0; z-index: 20; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0;
+    #nav { position: fixed; top: auto; bottom: 0; left: 0; right: 0; margin: 0; z-index: 20; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0;
       padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); overflow: visible; border-bottom: 0; border-top: 1px solid var(--sep); }
     #nav a { flex-direction: column; justify-content: center; gap: 2px; padding: 4px 0; background: transparent; border-radius: 12px; font-size: 10.5px; color: var(--muted); }
     #nav a .ico { display: inline-grid; width: 30px; height: 26px; background: transparent; color: var(--muted); }
@@ -520,6 +520,40 @@
     box-shadow: var(--sombra), inset 4px 0 0 var(--naranja); animation: aparecer 0.35s var(--curva); }
   #avisoRespaldo.oculto { display: none; }
   #avisoRespaldo span { flex: 1 1 260px; }
+
+  /* Consultar el MAF: buscador grande, pastillas de valor, tabla con todas las columnas y ficha */
+  .buscador { display: flex; align-items: center; gap: 10px; min-height: 50px; padding: 0 14px; margin: 0 0 12px; border-radius: 14px; background: var(--relleno);
+    transition: box-shadow 0.25s var(--curva); }
+  .buscador:focus-within { box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.25); }
+  .buscador svg { flex: none; width: 20px; height: 20px; color: var(--muted); }
+  .buscador input { flex: 1; min-width: 0; border: 0; background: transparent; font-size: 17px; min-height: 48px; padding: 0; box-shadow: none; outline: none; }
+  .filtros-maf { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; }
+  .filtros-maf .opciones { margin-bottom: 8px; }
+  .valor-p { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .valor-p.con { background: rgba(52, 199, 89, 0.16); color: var(--ok); }
+  .valor-p.dep { background: rgba(142, 142, 147, 0.18); color: var(--muted); }
+  .valor-p.sin { background: var(--relleno); color: var(--muted); font-weight: 500; }
+  .maf-tabla th, .maf-tabla td { white-space: nowrap; }
+  .maf-tabla .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .maf-tabla tr.clic { cursor: pointer; }
+  .maf-tabla tr.clic:hover > td { background: var(--relleno); }
+  .maf-tabla tr.clic.actual > td { background: var(--sel); }
+  .vacio-maf { white-space: normal !important; text-align: center; color: var(--muted); padding: 28px 16px !important; }
+  #mod-maf fieldset { min-width: 0; }   /* la tabla ancha se desplaza dentro de su recuadro, no empuja la página */
+  #mod-maf legend + * { clear: both; }  /* lo que va bajo el título no se encima con él */
+  .ficha-maf-cab { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; clear: both; }
+  .ficha-maf-cab > div:first-child { flex: 1; min-width: 0; }
+  .ficha-maf-t { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+  .ficha-maf-cab .valor-p { font-size: 14px; padding: 4px 12px; }
+  .ficha-maf-valor { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 14px 0 10px; }
+  .ficha-maf-valor > div { background: var(--anidado); border-radius: 16px; padding: 10px 14px; }
+  .ficha-maf-valor span { display: block; font-size: 12px; color: var(--muted); }
+  .ficha-maf-valor b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .ficha-maf-valor small { font-size: 12px; color: var(--muted); }
+  .dep-barra { height: 8px; border-radius: 999px; background: rgba(52, 199, 89, 0.25); overflow: hidden; }
+  .dep-barra i { display: block; height: 100%; border-radius: 999px; background: var(--muted); transition: width 0.5s var(--curva); }
+  .dep-txt { margin: 6px 0 4px; }
+  #mod-maf [data-c="fichaBox"] { animation: aparecer 0.3s var(--curva); }
 
   /* Hoja impresa del levantamiento (solo existe al imprimir; papel blanco, tinta negra) */
   #impresion { display: none; }
@@ -614,6 +648,7 @@
 <div id="mod-anexo3" class="oculto"></div>
 <div id="mod-levantamiento" class="oculto"></div>
 <div id="mod-consultas" class="oculto"></div>
+<div id="mod-maf" class="oculto"></div>
 </div>
 
 <div id="lectura"><span id="lecturaIco" aria-hidden="true"></span><span id="lecturaTexto"></span><button id="lecturaDeshacer" class="oculto">Deshacer</button></div>
@@ -631,6 +666,7 @@
 <script src="js/mod-plaqueo.js"></script>
 <script src="js/mod-levantamiento.js"></script>
 <script src="js/mod-consultas.js"></script>
+<script src="js/mod-maf.js"></script>
 <script src="js/inicio.js"></script>
 </body>
 </html>
