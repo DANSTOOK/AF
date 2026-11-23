@@ -36,7 +36,12 @@ Arriba hay cinco pestañas en la misma página; al hacer clic el módulo entra d
    - *Seguimiento*: todo Excel generado queda registrado; al cargar un MAF más nuevo dice si cada movimiento ya se aplicó, sigue pendiente o se aplicó distinto. *Quitar los aplicados* limpia la lista.
 9. **Consultar el MAF** (solo consulta, no modifica nada):
    - Un buscador para placa, No. Activo, serie, CR, tienda o artículo. Se pueden combinar palabras ("impresora 36UCC", "laptop tijuana este"); no importan acentos ni espacios ("laptop" encuentra "LAP TOP").
-   - Filtros: *Todos / Con valor / Depreciados* y año de adquisición. Los indicadores suman resultados, con valor, depreciados, valor neto y costo.
+   - Filtros como en Excel, en pastillas: **Plaza**, **Tienda / área** (CR), **Artículo**, **Marca** y **Año de adquisición**, más *Todos / Con valor / Depreciados*.
+     - Cada pastilla abre una lista con buscador. Se pueden marcar varios valores, por ejemplo varios artículos de varios años; los marcados se combinan entre filtros.
+     - Cada lista solo ofrece lo que existe con la búsqueda y los demás filtros, con cuántos activos hay de cada uno, igual que el filtro de Excel.
+     - *Marcar los de la lista* marca todo lo que coincide con lo escrito en el buscador de la lista. *Sin filtro* lo quita. *Quitar filtros* limpia todos.
+     - En teléfono la lista sube como hoja desde abajo.
+   - Los indicadores suman resultados, con valor, depreciados, valor neto y costo. El Excel exportado trae una hoja *Criterios* con la búsqueda y los filtros usados.
    - La tabla muestra todas las columnas del MAF, en su orden, más la columna *Valor*. Se ven 200 renglones; *Exportar resultados a Excel* saca todos.
    - Al tocar un renglón (o si sale un solo resultado) aparece la ficha del activo: fecha de adquisición y antigüedad, costo, depreciación acumulada (% del costo), valor neto, una barra de depreciación y todas las columnas agrupadas.
    - Con el escáner se lee la placa y sale su ficha, con el aviso grande de abajo.

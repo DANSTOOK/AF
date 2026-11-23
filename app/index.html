@@ -555,6 +555,53 @@
   .dep-txt { margin: 6px 0 4px; }
   #mod-maf [data-c="fichaBox"] { animation: aparecer 0.3s var(--curva); }
 
+  /* Filtros de columna tipo Excel: pastillas que abren una lista con selección múltiple */
+  .chips-filtro { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 10px; }
+  .chip-f { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; max-width: 100%; padding: 0 12px 0 14px; border-radius: 999px;
+    background: var(--relleno); color: var(--fg); font-size: 15px; font-weight: 500; box-shadow: none;
+    transition: background-color 0.2s var(--curva), color 0.2s var(--curva), transform 0.15s ease-out; }
+  .chip-f:active { transform: scale(0.97); }
+  .chip-f b { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+  .chip-f svg { flex: none; width: 16px; height: 16px; opacity: 0.6; transition: transform 0.28s var(--curva); }
+  .chip-f.abierto svg { transform: rotate(180deg); }
+  .chip-f.on { background: var(--azul); color: #fff; }
+  .chip-f.on span { opacity: 0.85; }
+  .chip-f.on svg { opacity: 0.9; }
+  .chip-quitar { min-height: 38px; border-radius: 999px; padding: 0 14px; background: transparent; color: var(--azul); font-size: 15px; box-shadow: none; }
+  .filtro-pop { position: absolute; z-index: 40; box-sizing: border-box; padding: 12px; border-radius: 22px; background: var(--card);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22), 0 0 0 1px var(--sep); display: flex; flex-direction: column; max-height: min(520px, 70vh);
+    transform-origin: top left; animation: popEntra 0.28s cubic-bezier(0.32, 0.72, 0, 1); }
+  .filtro-pop.oculto { display: none; }
+  @keyframes popEntra { from { opacity: 0; transform: translateY(-6px) scale(0.97); } to { opacity: 1; transform: none; } }
+  .pop-cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 2px 10px; }
+  .pop-cab b { font-size: 17px; letter-spacing: -0.01em; }
+  .pop-cab button { min-height: 34px; padding: 0 16px; border-radius: 999px; font-size: 15px; }
+  .buscador.chico { min-height: 40px; margin-bottom: 8px; }
+  .buscador.chico input { min-height: 38px; font-size: 16px; }
+  .pop-acc { display: flex; gap: 8px; margin-bottom: 6px; }
+  .pop-acc button { flex: 1; min-height: 34px; border-radius: 12px; font-size: 14px; }
+  .pop-estado { font-size: 12px; margin: 2px 4px 6px; }
+  .pop-lista { overflow-y: auto; overscroll-behavior: contain; margin: 0 -4px; }
+  .pop-op { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 42px; padding: 0 10px; border-radius: 12px; background: transparent;
+    color: var(--fg); font-size: 15px; font-weight: 400; text-align: left; box-shadow: none; transition: background-color 0.15s ease-out, transform 0.15s ease-out; }
+  .pop-op:hover { background: var(--relleno); }
+  .pop-op:active { transform: scale(0.98); }
+  .pop-op .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pop-op .n { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .pop-op .chk { flex: none; width: 22px; height: 22px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px rgba(120, 120, 128, 0.5);
+    display: grid; place-items: center; transition: background-color 0.2s var(--curva), box-shadow 0.2s var(--curva); }
+  .pop-op.on .chk { background: var(--azul); box-shadow: none; }
+  .pop-op.on .chk::after { content: ''; width: 10px; height: 5px; border: solid #fff; border-width: 0 0 2px 2px; transform: translateY(-1px) rotate(-45deg); }
+  .pop-op.on .t { font-weight: 600; }
+  .pop-vacio { padding: 16px; text-align: center; }
+  /* Teléfono: la lista sube como hoja desde abajo */
+  @media (max-width: 599px) {
+    .filtro-pop { position: fixed; left: 0 !important; right: 0; bottom: 0; top: auto !important; width: auto !important; max-height: 78vh;
+      border-radius: 28px 28px 0 0; padding: 8px 16px calc(16px + env(safe-area-inset-bottom)); animation: hojaSube 0.38s cubic-bezier(0.32, 0.72, 0, 1); }
+    @keyframes hojaSube { from { transform: translateY(100%); } to { transform: none; } }
+    .chip-f b { max-width: 140px; }
+  }
+
   /* Hoja impresa del levantamiento (solo existe al imprimir; papel blanco, tinta negra) */
   #impresion { display: none; }
   @media print {

@@ -687,7 +687,7 @@
     anexo3: ['Llena los datos de la baja', 'Escanea las placas', 'Revisa y presiona ✓', 'Descarga el Anexo 3'],
     levantamiento: ['Elige la tienda', 'Escanea la placa del activo', 'Revisa serie, marca y modelo', 'Descarga el formato de alta'],
     consultas: ['Elige qué consultar', 'Toca un indicador para filtrar', 'Exporta o imprime'],
-    maf: ['Escribe o escanea lo que buscas', 'Filtra por valor o año', 'Toca un renglón para ver su ficha', 'Exporta si lo necesitas']
+    maf: ['Escribe o escanea lo que buscas', 'Filtra por plaza, tienda, artículo o año', 'Toca un renglón para ver su ficha', 'Exporta si lo necesitas']
   };
   App.moduloActual = (location.hash || '').replace('#', '') || 'movimientos';
   if (NAV.indexOf(App.moduloActual) < 0) App.moduloActual = 'movimientos';
