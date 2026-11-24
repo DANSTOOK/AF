@@ -655,6 +655,7 @@
   .anios-maf { margin-top: 12px; padding: 12px 14px 8px; border-radius: 16px; background: var(--anidado); }
   .anios-tit { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 12px; font-size: 13px; margin-bottom: 10px; }
   .anios-tit b { font-size: 15px; }
+  .ley-i { white-space: nowrap; }
   .ley { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin: 0 4px 0 8px; vertical-align: -1px; }
   .ley.con, .anio-col .con, .res-barra .con { background: var(--verde); }
   .ley.dep, .anio-col .dep, .res-barra .dep { background: rgba(142, 142, 147, 0.55); }
@@ -822,6 +823,27 @@
   .aviso-placa[data-aviso="ok"] { color: var(--ok); }
   .aviso-placa[data-aviso="aviso"] { color: var(--warn); }
   .aviso-placa[data-aviso="err"] { color: var(--err); }
+  /* Botón ✕ para borrar: círculo gris con tache blanco a la derecha del campo, solo mientras se escribe y hay texto */
+  label:has(> .borrar-campo) { position: relative; }
+  .borrar-campo { position: absolute; z-index: 2; width: 30px; height: 30px; min-height: 0; padding: 0; margin: 0; border-radius: 50%; color: transparent; box-shadow: none;
+    background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Ccircle cx='15' cy='15' r='10' fill='%238E8E93' fill-opacity='.7'/%3E%3Cpath d='M11.6 11.6l6.8 6.8M18.4 11.6l-6.8 6.8' stroke='%23fff' stroke-width='1.9' stroke-linecap='round'/%3E%3C/svg%3E") center / 30px no-repeat;
+    animation: borrarEntra 0.2s var(--curva); transition: transform 0.15s ease-out, opacity 0.15s ease-out; }
+  .borrar-campo::before { content: ''; position: absolute; inset: -7px; }  /* área táctil de 44 px */
+  .borrar-campo:hover { filter: brightness(0.85); }
+  .borrar-campo:active { transform: scale(0.85); opacity: 1; }
+  label:has(> input:placeholder-shown) > .borrar-campo { display: none; }
+  @keyframes borrarEntra { from { opacity: 0; transform: scale(0.6); } }
+  input.con-borrar { padding-right: 40px; background-image: none !important; }
+  input.con-borrar::-webkit-calendar-picker-indicator { display: none !important; }
+  /* Teléfono: en Consultar el MAF los indicadores van de dos en dos; valor neto y costo (cifras largas) a lo ancho */
+  @media (max-width: 599px) {
+    #mod-maf .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #mod-maf .stats > .stat:nth-child(n+5) { grid-column: 1 / -1; }
+    /* Gráfica por año con muchos años: solo se rotulan los de 5 en 5 (2000, 2005…) y los elegidos, sin encimarse */
+    .anios-barras.muchos .anio-t { overflow: visible; margin: 0 -8px; }
+    .anios-barras.muchos .anio-b:not(.cinco):not(.on) .anio-t { visibility: hidden; }
+    .anios-barras.muchos .anio-b.on:not(.cinco) .anio-t { color: var(--azul); font-weight: 600; }
+  }
   /* El buscador del MAF ya tiene su propia cápsula */
   .buscador input, .buscador input:hover, .buscador input:focus { background: transparent !important; box-shadow: none !important; border-radius: 0; }
   @media (max-width: 599px) {

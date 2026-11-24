@@ -111,6 +111,8 @@ En el V.2 se escribe desde el renglón 2: el ejemplo del formato se sobrescribe 
 - Los resúmenes son indicadores grandes (Consultar el MAF, Plaqueo, Levantamiento); en Consultar el MAF, tocar un indicador filtra por ese estado.
 - Cada módulo tiene título grande con su ícono, la franja de qué se captura, el paso "Ahora" resaltado y la vista previa como ficha (cada dato con su etiqueta). Tarjetas redondeadas, opciones como interruptores, tablas como listas agrupadas. Claro por defecto; el modo oscuro se activa con el interruptor "Modo oscuro" de la barra lateral y se recuerda.
 - Campos de texto: el nombre va arriba en gris y el campo abajo (como en Ajustes de iPhone), con borde fino; al escribir, el campo se pone blanco con halo azul y su nombre se pinta de azul. Dentro de bloques grises los campos van en blanco.
+- Mientras se escribe en un campo con texto sale a la derecha una ✕ gris para borrarlo de un toque (como en iPhone); el cursor se queda en el campo. Borrar así es igual que borrarlo a mano.
+- En teléfono, los indicadores de Consultar el MAF van de dos en dos (valor neto y costo a lo ancho) y la gráfica por año solo rotula los años de 5 en 5 ('00, '05, '10…) y los elegidos.
 - Publicado para pruebas en GitHub Pages (repo DANSTOOK/AF): la página de inicio `index.html` abre `Movimientos AF.html`. El MAF y lo capturado se quedan en el navegador de cada quien; no se suben.
 - Todo el diseño está en el bloque <style> de index.html (variables al inicio). El cambio fue solo visual: la lógica, los formatos y el escáner no cambiaron.
 

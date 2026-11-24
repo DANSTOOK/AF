@@ -508,10 +508,10 @@
       var max = anios.reduce(function (m, a) { var x = porAnio.get(a); return Math.max(m, x.con + x.dep + x.sin); }, 1);
       var marcados = filtros.anio;
       q('anios').innerHTML = '<div class="anios-tit"><b>Activos por año de adquisición</b><span class="muted">Toque un año para filtrarlo · ' +
-          '<i class="ley con"></i>con valor <i class="ley dep"></i>depreciados</span></div>' +
-        '<div class="anios-barras" style="--n:' + anios.length + '">' + anios.map(function (a) {
+          '<span class="ley-i"><i class="ley con"></i>con valor</span> <span class="ley-i"><i class="ley dep"></i>depreciados</span></span></div>' +
+        '<div class="anios-barras' + (anios.length > 14 ? ' muchos' : '') + '" style="--n:' + anios.length + '">' + anios.map(function (a) {
           var x = porAnio.get(a), tot = x.con + x.dep + x.sin, on = marcados.has(a);
-          return '<button class="anio-b' + (on ? ' on' : '') + (marcados.size && !on ? ' atenuado' : '') + '" data-anio="' + esc(a) + '" title="' +
+          return '<button class="anio-b' + (Number(a) % 5 === 0 ? ' cinco' : '') + (on ? ' on' : '') + (marcados.size && !on ? ' atenuado' : '') + '" data-anio="' + esc(a) + '" title="' +
             esc(a + ': ' + tot.toLocaleString() + ' activos · ' + x.con.toLocaleString() + ' con valor · ' + x.dep.toLocaleString() + ' depreciados') + '">' +
             '<span class="anio-col" style="height:' + Math.max(3, tot * 100 / max).toFixed(1) + '%">' +
               '<i class="con" style="flex:' + x.con + '"></i><i class="dep" style="flex:' + (x.dep + x.sin) + '"></i></span>' +

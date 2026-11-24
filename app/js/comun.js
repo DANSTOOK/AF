@@ -627,6 +627,51 @@
   document.addEventListener('focusin', function (e) { if (e.target.matches && e.target.matches(SEL_PLACA)) pintarAvisoPlaca(e.target); });
   document.addEventListener('keyup', function (e) { if (e.key === 'Enter' && e.target.matches && e.target.matches(SEL_PLACA)) pintarAvisoPlaca(e.target); });
 
+  // ---------- Botón ✕ para borrar el campo (como en iPhone): sale mientras se escribe en un campo con texto ----------
+  // Borrar equivale a que el usuario borre a mano: se avisa con los mismos eventos input/change que ya escucha cada módulo.
+  var borrar = document.createElement('button');
+  borrar.type = 'button'; borrar.className = 'borrar-campo'; borrar.tabIndex = -1;
+  borrar.setAttribute('aria-label', 'Borrar'); borrar.title = 'Borrar';
+  var campoBorrar = null;
+  function esCampoBorrable(el) {
+    return !!el && el.tagName === 'INPUT' && /^(text|)$/i.test(el.getAttribute('type') || '') && !el.readOnly && !el.disabled &&
+      !!el.closest('label') && !!el.closest('[id^="mod-"]');
+  }
+  function colocarBorrar() {
+    var el = campoBorrar;
+    if (!el || document.activeElement !== el || !el.value || !esCampoBorrable(el)) {
+      if (borrar.parentNode) borrar.parentNode.removeChild(borrar);
+      if (el) el.classList.remove('con-borrar');
+      return;
+    }
+    var label = el.closest('label');
+    if (borrar.parentNode !== label) label.appendChild(borrar);
+    el.classList.add('con-borrar');
+    if (!el.hasAttribute('placeholder')) el.setAttribute('placeholder', ' '); // si el módulo vacía el campo, la ✕ se oculta sola (CSS)
+    borrar.style.top = (el.offsetTop + (el.offsetHeight - 30) / 2) + 'px';
+    borrar.style.left = (el.offsetLeft + el.offsetWidth - 30 - 7) + 'px';
+  }
+  // Se borra al presionar (no al soltar): si la lista de sugerencias de CR/Tienda está abierta, Chrome se queda con el clic
+  borrar.addEventListener('mousedown', function (e) { e.preventDefault(); if (e.button === 0) vaciarCampo(); }); // el cursor se queda en el campo
+  borrar.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); vaciarCampo(); });
+  function vaciarCampo() {
+    var el = campoBorrar;
+    if (!el || !el.value) return;
+    el.value = '';
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+    el.focus();
+    colocarBorrar();
+  }
+  document.addEventListener('focusin', function (e) {
+    if (campoBorrar && campoBorrar !== e.target) campoBorrar.classList.remove('con-borrar');
+    campoBorrar = esCampoBorrable(e.target) ? e.target : null;
+    colocarBorrar();
+  });
+  document.addEventListener('focusout', function () { setTimeout(colocarBorrar, 0); });
+  document.addEventListener('input', function (e) { if (e.target === campoBorrar) colocarBorrar(); });
+  window.addEventListener('resize', function () { if (campoBorrar) colocarBorrar(); });
+
   App.pref = function (k, def) { var v = App.leerLS('af_pref_' + k, null); return v === null ? def : v; };
   App.guardarPref = function (k, v) { App.guardarLS('af_pref_' + k, v); };
 
