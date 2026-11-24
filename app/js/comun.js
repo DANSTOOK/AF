@@ -540,6 +540,93 @@
   /** Cada módulo indica su campo de placa y qué hacer con cada lectura; se usa el del módulo visible */
   App.registrarEscaner = function (modulo, cfg) { registros[modulo] = cfg; };
 
+  // ---------- Aviso de color en el campo Placa (solo visual: consulta el MAF, no cambia lo que hace ✓) ----------
+  // Verde: lo esperado para el movimiento · Naranja: se puede pero hay algo que revisar · Rojo: así no se va a poder.
+  // Alta / plaqueo: la placa debe ser nueva. Baja / transferencia: debe existir. Revisión de levantamiento: debe ser de la tienda.
+  function avisoDePlaca(input) {
+    var maf = App.maf, p = AF.util.limpiaPlaca(input.value);
+    var mod = input.closest('[id^="mod-"]');
+    if (!maf || !p || !mod) return null;
+    var modulo = mod.id.slice(4);
+    var tipoIn = mod.querySelector('input[data-c="tipo"]');
+    var modo = input.getAttribute('data-c') === 'placaRev' ? 'REV' : modulo === 'plaqueo' || modulo === 'levantamiento' ? 'PLAQUEO' : tipoIn ? tipoIn.value : 'ALTA';
+    var crIn = mod.querySelector('input[data-c="cr"]');
+    var cr = crIn ? AF.util.texto(crIn.value).toUpperCase() : '';
+    var largos = (maf.perfilPlacas && maf.perfilPlacas.longitudes) || [];
+    var regs = maf.idx.porPlaca.get(AF.util.llavePlaca(p)) || [];
+    var r = regs[0];
+    // [color, nota corta junto al título, texto completo al pasar el mouse]
+    var donde = r ? r.descripcion + ' · CR ' + r.cr : '';
+    var completo = r ? 'Activo ' + r.noActivo + ' · ' + r.descripcion + ' · CR ' + r.cr + ' ' + r.crDesc : '';
+    if (!regs.length && largos.length && p.length < largos[0]) return null; // aún escribiendo
+    if (regs.length > 1) return modo === 'ALTA' || modo === 'PLAQUEO'
+      ? ['err', 'Ya existe (duplicada)', 'La placa ya está en el MAF en ' + regs.length + ' activos']
+      : ['aviso', 'Duplicada: ' + regs.length + ' activos', 'La placa está duplicada en el MAF (' + regs.length + ' activos); al validar elegirá el correcto'];
+    if (modo === 'ALTA' || modo === 'PLAQUEO') {
+      if (!r) {
+        var motivo = AF.revisarLectura(maf.perfilPlacas, p);
+        return motivo ? ['aviso', '¿Es la placa?', motivo] : ['ok', 'Libre', 'Placa nueva: no está en el MAF'];
+      }
+      if (modo === 'ALTA' && (!cr || r.cr === cr)) return ['aviso', 'Ya casada aquí', 'Ya está casada en el MAF con este equipo de la tienda: ' + completo];
+      return ['err', 'Ya es de ' + donde, 'La placa ya está asignada en el MAF: ' + completo];
+    }
+    if (!r) {
+      if (largos.length && largos.indexOf(p.length) < 0) return ['aviso', '¿Completa?', 'Las placas del MAF tienen ' + largos.join(', ') + ' dígitos'];
+      return ['err', 'No existe en el MAF', 'La placa no está en el MAF'];
+    }
+    if (modo === 'REV' && cr && r.cr !== cr) return ['aviso', 'Otra tienda: CR ' + r.cr, 'Es de otra tienda: ' + completo];
+    return ['ok', donde, completo];
+  }
+  // Cuando el módulo cambia el valor por código (al agregar con ✓ lo deja vacío), el aviso se vuelve a pintar.
+  // Solo se observa la asignación: el valor se guarda igual que siempre.
+  var VALOR = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  function vigilarPlaca(input) {
+    if (input._avisoVigilado || !VALOR) return;
+    input._avisoVigilado = true;
+    Object.defineProperty(input, 'value', {
+      configurable: true,
+      get: function () { return VALOR.get.call(this); },
+      set: function (v) {
+        VALOR.set.call(this, v);
+        var el = this; clearTimeout(el._tAviso); el._tAviso = setTimeout(function () { pintarAvisoPlaca(el); }, 0);
+      }
+    });
+  }
+  function pintarAvisoPlaca(input) {
+    if (!input || !input.closest) return;
+    vigilarPlaca(input);
+    var label = input.closest('label');
+    if (!input.hasAttribute('placeholder')) input.setAttribute('placeholder', ' '); // con :placeholder-shown el aviso se apaga solo si el campo queda vacío
+    var a = null;
+    try { a = avisoDePlaca(input); } catch (e) { a = null; }
+    var nota = label && label.querySelector('.aviso-placa');
+    if (!a) { input.removeAttribute('data-aviso'); input.removeAttribute('title'); if (nota) nota.textContent = ''; return; }
+    input.setAttribute('data-aviso', a[0]);
+    if (label && !nota) { nota = document.createElement('small'); nota.className = 'aviso-placa'; label.appendChild(nota); }
+    if (nota) { nota.textContent = a[1]; nota.title = a[2]; nota.setAttribute('data-aviso', a[0]); }
+    input.title = a[2];
+  }
+  var SEL_PLACA = '[id^="mod-"] input[data-c="placa"], [id^="mod-"] input[data-c="placaRev"]';
+  var tAvisoPlaca = null;
+  // Al cargar (o cambiar) el MAF se revisan los campos de placa de todas las pestañas
+  App.alMaf(function () { setTimeout(function () { document.querySelectorAll(SEL_PLACA).forEach(pintarAvisoPlaca); }, 0); });
+  function revisarPlacasDe(mod) {
+    if (mod) mod.querySelectorAll('input[data-c="placa"], input[data-c="placaRev"]').forEach(pintarAvisoPlaca);
+  }
+  document.addEventListener('input', function (e) {
+    var t = e.target;
+    if (!t.matches) return;
+    if (t.matches(SEL_PLACA)) { clearTimeout(tAvisoPlaca); tAvisoPlaca = setTimeout(function () { pintarAvisoPlaca(t); }, 150); }
+    else if (t.matches('[id^="mod-"] input[data-c="cr"], [id^="mod-"] input[data-c="tienda"]')) revisarPlacasDe(t.closest('[id^="mod-"]'));
+  });
+  // Cambio de Alta/Baja/Transferencia, ✓ o Quitar: se vuelve a revisar después de que el módulo hizo lo suyo
+  document.addEventListener('click', function (e) {
+    var mod = e.target.closest && e.target.closest('[id^="mod-"]');
+    if (mod) setTimeout(function () { revisarPlacasDe(mod); }, 0);
+  });
+  document.addEventListener('focusin', function (e) { if (e.target.matches && e.target.matches(SEL_PLACA)) pintarAvisoPlaca(e.target); });
+  document.addEventListener('keyup', function (e) { if (e.key === 'Enter' && e.target.matches && e.target.matches(SEL_PLACA)) pintarAvisoPlaca(e.target); });
+
   App.pref = function (k, def) { var v = App.leerLS('af_pref_' + k, null); return v === null ? def : v; };
   App.guardarPref = function (k, v) { App.guardarLS('af_pref_' + k, v); };
 
@@ -627,6 +714,7 @@
     registro.placa.value = p;
     registro.placa.focus();
     registro.alLeer(p);
+    pintarAvisoPlaca(registro.placa);
   }
 
   function reportarPrueba(info) {

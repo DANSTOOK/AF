@@ -800,6 +800,28 @@
   .rango-maf label:has(> input:not([type="checkbox"]):not([type="file"]):not([type="hidden"])):focus-within, .barra-res label:has(> select):focus-within { color: var(--fg); }
   /* La placa es el campo principal (se llena con el escáner): más grande y con números tabulares */
   input[data-c="placa"], input[data-c="placaRev"] { font-size: 18px; font-weight: 600; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+  /* Aviso de color en la placa mientras se escribe: verde = bien, naranja = revisar, rojo = no se va a poder.
+     Ícono a la derecha del campo y una línea corta abajo; si el campo queda vacío, se apaga solo. */
+  input[data-aviso]:not(:placeholder-shown) { padding-right: 40px; background-repeat: no-repeat; background-position: right 12px center; background-size: 20px; }
+  input[data-aviso="ok"]:not(:placeholder-shown) { box-shadow: inset 0 0 0 1.5px var(--verde); background-color: color-mix(in srgb, var(--verde) 9%, var(--card)) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='10' fill='%2334C759'/%3E%3Cpath d='M5.8 10.4l2.8 2.8 5.6-6' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+  input[data-aviso="aviso"]:not(:placeholder-shown) { box-shadow: inset 0 0 0 1.5px var(--naranja); background-color: color-mix(in srgb, var(--naranja) 9%, var(--card)) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='10' fill='%23FF9500'/%3E%3Cpath d='M10 5.2v6' stroke='%23fff' stroke-width='2.2' stroke-linecap='round'/%3E%3Ccircle cx='10' cy='14.6' r='1.3' fill='%23fff'/%3E%3C/svg%3E"); }
+  input[data-aviso="err"]:not(:placeholder-shown) { box-shadow: inset 0 0 0 1.5px var(--rojo); background-color: color-mix(in srgb, var(--rojo) 8%, var(--card)) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='10' fill='%23FF3B30'/%3E%3Cpath d='M6.8 6.8l6.4 6.4M13.2 6.8l-6.4 6.4' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E"); }
+  input[data-aviso="ok"]:not(:placeholder-shown):focus { box-shadow: inset 0 0 0 1.5px var(--verde), 0 0 0 4px color-mix(in srgb, var(--verde) 18%, transparent); }
+  input[data-aviso="aviso"]:not(:placeholder-shown):focus { box-shadow: inset 0 0 0 1.5px var(--naranja), 0 0 0 4px color-mix(in srgb, var(--naranja) 18%, transparent); }
+  input[data-aviso="err"]:not(:placeholder-shown):focus { box-shadow: inset 0 0 0 1.5px var(--rojo), 0 0 0 4px color-mix(in srgb, var(--rojo) 16%, transparent); }
+  label:has(> input[data-aviso]:not(:placeholder-shown)):focus-within { color: var(--muted); }
+  /* La nota va en la misma línea que el título "Placa" (no mueve nada al escanear); el texto completo sale al pasar el mouse */
+  label:has(> input[data-c="placa"]), label:has(> input[data-c="placaRev"]) { display: inline-grid; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; column-gap: 8px; }
+  label > input[data-c="placa"], label > input[data-c="placaRev"] { grid-column: 1 / -1; }
+  .aviso-placa { grid-column: 2; grid-row: 1; width: 0; min-width: 100%; font-size: 12px; font-weight: 600; letter-spacing: 0; text-align: right;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; animation: aparecer 0.25s var(--curva); }
+  .aviso-placa:empty, label:has(> input:placeholder-shown) .aviso-placa { visibility: hidden; }
+  .aviso-placa[data-aviso="ok"] { color: var(--ok); }
+  .aviso-placa[data-aviso="aviso"] { color: var(--warn); }
+  .aviso-placa[data-aviso="err"] { color: var(--err); }
   /* El buscador del MAF ya tiene su propia cápsula */
   .buscador input, .buscador input:hover, .buscador input:focus { background: transparent !important; box-shadow: none !important; border-radius: 0; }
   @media (max-width: 599px) {
@@ -2710,6 +2732,93 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
   /** Cada módulo indica su campo de placa y qué hacer con cada lectura; se usa el del módulo visible */
   App.registrarEscaner = function (modulo, cfg) { registros[modulo] = cfg; };
 
+  // ---------- Aviso de color en el campo Placa (solo visual: consulta el MAF, no cambia lo que hace ✓) ----------
+  // Verde: lo esperado para el movimiento · Naranja: se puede pero hay algo que revisar · Rojo: así no se va a poder.
+  // Alta / plaqueo: la placa debe ser nueva. Baja / transferencia: debe existir. Revisión de levantamiento: debe ser de la tienda.
+  function avisoDePlaca(input) {
+    var maf = App.maf, p = AF.util.limpiaPlaca(input.value);
+    var mod = input.closest('[id^="mod-"]');
+    if (!maf || !p || !mod) return null;
+    var modulo = mod.id.slice(4);
+    var tipoIn = mod.querySelector('input[data-c="tipo"]');
+    var modo = input.getAttribute('data-c') === 'placaRev' ? 'REV' : modulo === 'plaqueo' || modulo === 'levantamiento' ? 'PLAQUEO' : tipoIn ? tipoIn.value : 'ALTA';
+    var crIn = mod.querySelector('input[data-c="cr"]');
+    var cr = crIn ? AF.util.texto(crIn.value).toUpperCase() : '';
+    var largos = (maf.perfilPlacas && maf.perfilPlacas.longitudes) || [];
+    var regs = maf.idx.porPlaca.get(AF.util.llavePlaca(p)) || [];
+    var r = regs[0];
+    // [color, nota corta junto al título, texto completo al pasar el mouse]
+    var donde = r ? r.descripcion + ' · CR ' + r.cr : '';
+    var completo = r ? 'Activo ' + r.noActivo + ' · ' + r.descripcion + ' · CR ' + r.cr + ' ' + r.crDesc : '';
+    if (!regs.length && largos.length && p.length < largos[0]) return null; // aún escribiendo
+    if (regs.length > 1) return modo === 'ALTA' || modo === 'PLAQUEO'
+      ? ['err', 'Ya existe (duplicada)', 'La placa ya está en el MAF en ' + regs.length + ' activos']
+      : ['aviso', 'Duplicada: ' + regs.length + ' activos', 'La placa está duplicada en el MAF (' + regs.length + ' activos); al validar elegirá el correcto'];
+    if (modo === 'ALTA' || modo === 'PLAQUEO') {
+      if (!r) {
+        var motivo = AF.revisarLectura(maf.perfilPlacas, p);
+        return motivo ? ['aviso', '¿Es la placa?', motivo] : ['ok', 'Libre', 'Placa nueva: no está en el MAF'];
+      }
+      if (modo === 'ALTA' && (!cr || r.cr === cr)) return ['aviso', 'Ya casada aquí', 'Ya está casada en el MAF con este equipo de la tienda: ' + completo];
+      return ['err', 'Ya es de ' + donde, 'La placa ya está asignada en el MAF: ' + completo];
+    }
+    if (!r) {
+      if (largos.length && largos.indexOf(p.length) < 0) return ['aviso', '¿Completa?', 'Las placas del MAF tienen ' + largos.join(', ') + ' dígitos'];
+      return ['err', 'No existe en el MAF', 'La placa no está en el MAF'];
+    }
+    if (modo === 'REV' && cr && r.cr !== cr) return ['aviso', 'Otra tienda: CR ' + r.cr, 'Es de otra tienda: ' + completo];
+    return ['ok', donde, completo];
+  }
+  // Cuando el módulo cambia el valor por código (al agregar con ✓ lo deja vacío), el aviso se vuelve a pintar.
+  // Solo se observa la asignación: el valor se guarda igual que siempre.
+  var VALOR = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  function vigilarPlaca(input) {
+    if (input._avisoVigilado || !VALOR) return;
+    input._avisoVigilado = true;
+    Object.defineProperty(input, 'value', {
+      configurable: true,
+      get: function () { return VALOR.get.call(this); },
+      set: function (v) {
+        VALOR.set.call(this, v);
+        var el = this; clearTimeout(el._tAviso); el._tAviso = setTimeout(function () { pintarAvisoPlaca(el); }, 0);
+      }
+    });
+  }
+  function pintarAvisoPlaca(input) {
+    if (!input || !input.closest) return;
+    vigilarPlaca(input);
+    var label = input.closest('label');
+    if (!input.hasAttribute('placeholder')) input.setAttribute('placeholder', ' '); // con :placeholder-shown el aviso se apaga solo si el campo queda vacío
+    var a = null;
+    try { a = avisoDePlaca(input); } catch (e) { a = null; }
+    var nota = label && label.querySelector('.aviso-placa');
+    if (!a) { input.removeAttribute('data-aviso'); input.removeAttribute('title'); if (nota) nota.textContent = ''; return; }
+    input.setAttribute('data-aviso', a[0]);
+    if (label && !nota) { nota = document.createElement('small'); nota.className = 'aviso-placa'; label.appendChild(nota); }
+    if (nota) { nota.textContent = a[1]; nota.title = a[2]; nota.setAttribute('data-aviso', a[0]); }
+    input.title = a[2];
+  }
+  var SEL_PLACA = '[id^="mod-"] input[data-c="placa"], [id^="mod-"] input[data-c="placaRev"]';
+  var tAvisoPlaca = null;
+  // Al cargar (o cambiar) el MAF se revisan los campos de placa de todas las pestañas
+  App.alMaf(function () { setTimeout(function () { document.querySelectorAll(SEL_PLACA).forEach(pintarAvisoPlaca); }, 0); });
+  function revisarPlacasDe(mod) {
+    if (mod) mod.querySelectorAll('input[data-c="placa"], input[data-c="placaRev"]').forEach(pintarAvisoPlaca);
+  }
+  document.addEventListener('input', function (e) {
+    var t = e.target;
+    if (!t.matches) return;
+    if (t.matches(SEL_PLACA)) { clearTimeout(tAvisoPlaca); tAvisoPlaca = setTimeout(function () { pintarAvisoPlaca(t); }, 150); }
+    else if (t.matches('[id^="mod-"] input[data-c="cr"], [id^="mod-"] input[data-c="tienda"]')) revisarPlacasDe(t.closest('[id^="mod-"]'));
+  });
+  // Cambio de Alta/Baja/Transferencia, ✓ o Quitar: se vuelve a revisar después de que el módulo hizo lo suyo
+  document.addEventListener('click', function (e) {
+    var mod = e.target.closest && e.target.closest('[id^="mod-"]');
+    if (mod) setTimeout(function () { revisarPlacasDe(mod); }, 0);
+  });
+  document.addEventListener('focusin', function (e) { if (e.target.matches && e.target.matches(SEL_PLACA)) pintarAvisoPlaca(e.target); });
+  document.addEventListener('keyup', function (e) { if (e.key === 'Enter' && e.target.matches && e.target.matches(SEL_PLACA)) pintarAvisoPlaca(e.target); });
+
   App.pref = function (k, def) { var v = App.leerLS('af_pref_' + k, null); return v === null ? def : v; };
   App.guardarPref = function (k, v) { App.guardarLS('af_pref_' + k, v); };
 
@@ -2797,6 +2906,7 @@ window.PLANTILLAS = {"V2":{"nombre":"Formato de Movimientos AF V.2 2026.xlsx","b
     registro.placa.value = p;
     registro.placa.focus();
     registro.alLeer(p);
+    pintarAvisoPlaca(registro.placa);
   }
 
   function reportarPrueba(info) {

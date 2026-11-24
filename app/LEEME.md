@@ -64,6 +64,11 @@ Arriba hay cinco pestañas en la misma página; al hacer clic el módulo entra d
    - Ya no hay pantalla de "seguimiento de lo enviado". El registro de lo generado se sigue guardando en el navegador y en el respaldo.
 
 ## Escáner (pistola USB, p. ej. Zebra)
+- **Color del campo Placa:** al escribir o escanear, el campo se pinta según lo que encuentra en el MAF, antes de presionar ✓. Junto al título "Placa" sale una nota corta; con el mouse encima se ve el texto completo.
+  - Alta, Plaqueo y alta del Levantamiento (la placa debe ser nueva): verde = libre; naranja = ya casada con un equipo de esta misma tienda o no parece placa; rojo = ya es de otro activo o está duplicada.
+  - Baja y transferencia (la placa debe existir): verde = existe (equipo y CR); naranja = duplicada (al validar se elige el activo) o le faltan dígitos; rojo = no existe en el MAF.
+  - Revisión del Levantamiento: verde = es de la tienda; naranja = es de otra tienda o duplicada; rojo = no está en el MAF.
+  - Es solo un aviso: lo que decide sigue siendo la validación al presionar ✓ (que además revisa lo ya capturado). Con menos dígitos que la placa más corta del MAF no se marca nada (aún se está escribiendo).
 - **Serie distinta:** en altas (Altas, Plaqueo y Levantamiento), si la serie escaneada o escrita no coincide con la que el MAF tiene para ese activo, sale un aviso naranja con las dos series. No bloquea: verifique que sea el mismo equipo.
 - Configuración del escáner: modo teclado (USB HID), sufijo **Enter**, sin prefijo, idioma de teclado igual al de Windows. Se configura escaneando los códigos de la guía rápida del modelo o con 123Scan de Zebra.
 - **Probar escáner** (arriba): con el recuadro abierto, cada lectura muestra qué mandó el escáner (caracteres, si terminó en Enter, si parece placa, si existe en el MAF) y no captura nada.
@@ -105,6 +110,8 @@ En el V.2 se escribe desde el renglón 2: el ejemplo del formato se sobrescribe 
 - En teléfono (menos de 600 px) los módulos van en una barra de pestañas abajo, con ícono y nombre corto.
 - Los resúmenes son indicadores grandes (Consultar el MAF, Plaqueo, Levantamiento); en Consultar el MAF, tocar un indicador filtra por ese estado.
 - Cada módulo tiene título grande con su ícono, la franja de qué se captura, el paso "Ahora" resaltado y la vista previa como ficha (cada dato con su etiqueta). Tarjetas redondeadas, opciones como interruptores, tablas como listas agrupadas. Claro por defecto; el modo oscuro se activa con el interruptor "Modo oscuro" de la barra lateral y se recuerda.
+- Campos de texto: el nombre va arriba en gris y el campo abajo (como en Ajustes de iPhone), con borde fino; al escribir, el campo se pone blanco con halo azul y su nombre se pinta de azul. Dentro de bloques grises los campos van en blanco.
+- Publicado para pruebas en GitHub Pages (repo DANSTOOK/AF): la página de inicio `index.html` abre `Movimientos AF.html`. El MAF y lo capturado se quedan en el navegador de cada quien; no se suben.
 - Todo el diseño está en el bloque <style> de index.html (variables al inicio). El cambio fue solo visual: la lógica, los formatos y el escáner no cambiaron.
 
 ## Desarrollo
