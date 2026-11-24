@@ -145,7 +145,7 @@
   .logo { flex: 0 0 auto; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 17px; letter-spacing: -0.02em;
     background: linear-gradient(145deg, #0A84FF, #5E5CE6); box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3); }
   #marca b { display: block; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
-  #marca span { font-size: 13px; color: var(--muted); }
+  #marca div span { font-size: 13px; color: var(--muted); }
 
   /* Íconos de módulo: insignia cuadrada redondeada con color propio */
   .ico { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 8px; display: inline-grid; place-items: center; color: #fff; background: var(--c, var(--azul)); }
@@ -314,7 +314,7 @@
   /* Campos: al escribir el campo se ilumina */
   input, select, textarea { transition: box-shadow 0.2s var(--curva), background-color 0.2s var(--curva); }
   input:not([type]):focus-visible, input[type="text"]:focus-visible, input[type="search"]:focus-visible, input[type="date"]:focus-visible,
-  select:focus-visible, textarea:focus-visible { background: var(--card); }
+  select:focus-visible, textarea:focus-visible { background-color: var(--card); }
 
   /* Botón principal con volumen sutil (mismo estilo en ✓, Dar de alta, Descargar y terminar y Cargar MAF) */
   .palomita, .botones button[data-b="guardar"], input[type="file"]::file-selector-button {
@@ -462,7 +462,7 @@
   .logo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 55%); pointer-events: none; }
   .logo svg { width: 27px; height: 27px; color: #fff; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.15)); }
   #marca b { font-size: 24px; letter-spacing: -0.025em; }
-  #marca span { display: block; margin-top: 2px; }
+  #marca div span { display: block; margin-top: 2px; }
 
   /* Con MAF: documento arriba, indicadores, antigüedad y al final el renglón discreto para cambiarlo */
   #mafBox { padding: 14px; }
@@ -601,7 +601,7 @@
   .maf-tabla tr.clic.actual > td { background: var(--sel); }
   .vacio-maf { white-space: normal !important; text-align: center; color: var(--muted); padding: 28px 16px !important; }
   #mod-maf fieldset { min-width: 0; }   /* la tabla ancha se desplaza dentro de su recuadro, no empuja la página */
-  #mod-maf legend + * { clear: both; }  /* lo que va bajo el título no se encima con él */
+  fieldset > legend + * { clear: both; }  /* lo que va bajo el título no se encima con él */
   .ficha-maf-cab { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; clear: both; }
   .ficha-maf-cab > div:first-child { flex: 1; min-width: 0; }
   .ficha-maf-t { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
@@ -763,6 +763,47 @@
       border-radius: 28px 28px 0 0; padding: 8px 16px calc(16px + env(safe-area-inset-bottom)); animation: hojaSube 0.38s cubic-bezier(0.32, 0.72, 0, 1); }
     @keyframes hojaSube { from { transform: translateY(100%); } to { transform: none; } }
     .chip-f b { max-width: 140px; }
+  }
+
+  /* ===== Campos de texto: título chico arriba (como en Ajustes de iPhone), borde fino, foco azul con halo ===== */
+  :root { --campo-borde: rgba(60, 60, 67, 0.10); --campo-hover: #EAEAEF; --placeholder: rgba(60, 60, 67, 0.34); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --campo-borde: rgba(255, 255, 255, 0.07); --campo-hover: #3A3A3C; --placeholder: rgba(235, 235, 245, 0.3); } }
+  :root[data-theme="dark"] { --campo-borde: rgba(255, 255, 255, 0.07); --campo-hover: #3A3A3C; --placeholder: rgba(235, 235, 245, 0.3); }
+
+  input[type="number"] { font-size: 16px; color: var(--fg); background: var(--campo); border: 0; min-height: 44px; padding: 0 12px; outline: none; max-width: 100%; box-sizing: border-box; -moz-appearance: textfield; }
+  input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  input:not([type]), input[type="text"], input[type="search"], input[type="date"], input[type="number"], select, textarea {
+    border-radius: 14px; font-weight: 400; letter-spacing: -0.01em; caret-color: var(--azul); box-shadow: inset 0 0 0 1px var(--campo-borde);
+    transition: box-shadow 0.25s var(--curva), background-color 0.25s var(--curva); }
+  :is(input:not([type]), input[type="text"], input[type="search"], input[type="date"], input[type="number"], select, textarea):hover:not(:focus):not(:disabled) { background-color: var(--campo-hover); }
+  :is(input:not([type]), input[type="text"], input[type="search"], input[type="date"], input[type="number"], select, textarea):focus {
+    background-color: var(--card); box-shadow: inset 0 0 0 1.5px var(--azul), 0 0 0 4px var(--sel); }
+  ::placeholder { color: var(--placeholder); }
+  textarea { display: block; width: 100%; min-height: 128px; padding: 12px 14px; resize: vertical; font-variant-numeric: tabular-nums; }
+  td :is(input:not([type]), input[type="text"], select) { border-radius: 9px; }
+  /* Dentro de un bloque gris (desplegables, filtros extra, ficha) el campo va en blanco para que se distinga */
+  :is(fieldset details, details details, .extras-maf, .ficha, .auto-resp) :is(input:not([type]), input[type="text"], input[type="search"], input[type="date"], input[type="number"], select, textarea) { background-color: var(--card); }
+
+  /* Iconos nativos dentro del campo (calendario, lista de sugerencias, borrar búsqueda) más discretos */
+  input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.5; cursor: pointer; padding: 4px; margin-right: -4px; border-radius: 7px; transition: opacity 0.15s ease-out, background-color 0.15s ease-out; }
+  input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; background-color: var(--relleno); }
+  input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; cursor: pointer;
+    background: rgba(120, 120, 128, 0.45) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath d='M6 6l6 6M12 6l-6 6' stroke='%23fff' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") center / 18px no-repeat; }
+
+  /* Etiqueta + campo: el nombre queda arriba en gris y el campo abajo; al escribir, el nombre se pinta de azul */
+  label:has(> input:not([type="checkbox"]):not([type="file"]):not([type="hidden"])), label:has(> select), label:has(> textarea) {
+    flex-direction: column; align-items: stretch; gap: 6px; margin: 4px 12px 10px 0; vertical-align: bottom;
+    font-size: 13px; font-weight: 600; color: var(--muted); letter-spacing: 0.01em; transition: color 0.2s var(--curva); }
+  label:has(> input:not([type="checkbox"]):not([type="file"]):not([type="hidden"])):focus-within, label:has(> select):focus-within { color: var(--azul); }
+  /* Excepciones que se leen mejor en una sola línea */
+  .rango-maf label:has(> input:not([type="checkbox"]):not([type="file"]):not([type="hidden"])), .barra-res label:has(> select) { flex-direction: row; align-items: center; gap: 8px; margin: 0; font-size: 15px; font-weight: 500; color: var(--fg); }
+  .rango-maf label:has(> input:not([type="checkbox"]):not([type="file"]):not([type="hidden"])):focus-within, .barra-res label:has(> select):focus-within { color: var(--fg); }
+  /* La placa es el campo principal (se llena con el escáner): más grande y con números tabulares */
+  input[data-c="placa"], input[data-c="placaRev"] { font-size: 18px; font-weight: 600; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+  /* El buscador del MAF ya tiene su propia cápsula */
+  .buscador input, .buscador input:hover, .buscador input:focus { background: transparent !important; box-shadow: none !important; border-radius: 0; }
+  @media (max-width: 599px) {
+    label:has(> input:not([type="checkbox"]):not([type="file"]):not([type="hidden"])), label:has(> select), label:has(> textarea) { margin-right: 0; }
   }
 
   /* Hoja impresa del levantamiento (solo existe al imprimir; papel blanco, tinta negra) */
